@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:project_jordan/components/buttons.dart';
 import 'package:project_jordan/components/text_fileds.dart';
 
 class SignInPage extends StatefulWidget {
@@ -13,6 +14,7 @@ class _SignInPageState extends State<SignInPage> {
   final usernameController = TextEditingController();
 
   final passwordController = TextEditingController();
+  void signUserIn() {}
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -29,7 +31,7 @@ class _SignInPageState extends State<SignInPage> {
                   fontSize: 30,
                   color: Colors.white,
                 )),
-            SizedBox(
+            const SizedBox(
               height: 10,
             ),
 
@@ -38,7 +40,7 @@ class _SignInPageState extends State<SignInPage> {
                 controller: usernameController,
                 hintText: "USER NAME",
                 obscureText: false),
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
             // password text field
@@ -48,6 +50,10 @@ class _SignInPageState extends State<SignInPage> {
                 obscureText: true),
 
             // login button
+            const SizedBox(
+              height: 20,
+            ),
+            MyButtons(ontap: signUserIn, text: "LOGIN"),
 
             // forget password
 
