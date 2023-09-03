@@ -5,7 +5,8 @@ import 'package:project_jordan/components/squre_tile.dart';
 import 'package:project_jordan/components/text_fileds.dart';
 
 class SignInPage extends StatefulWidget {
-  const SignInPage({super.key});
+  final Function()? onTap;
+  const SignInPage({super.key, required this.onTap});
 
   @override
   State<SignInPage> createState() => _SignInPageState();
@@ -118,7 +119,7 @@ class _SignInPageState extends State<SignInPage> {
                     width: 5,
                   ),
                   GestureDetector(
-                    onTap: null,
+                    onTap: widget.onTap,
                     child: Text('Register now!',
                         style: GoogleFonts.bebasNeue(
                           fontSize: 30,

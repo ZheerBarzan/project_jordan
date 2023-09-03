@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:project_jordan/pages/sign_in_page.dart';
-import 'package:project_jordan/pages/sign_up_page.dart';
+import 'package:project_jordan/pages/login_or_registation.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,7 +12,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: SignUpPage(),
+      home: LoginOrRegistrationPages(),
     );
   }
 }
