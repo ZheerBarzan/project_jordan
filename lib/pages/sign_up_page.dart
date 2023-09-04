@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:project_jordan/components/buttons.dart';
 import 'package:project_jordan/components/squre_tile.dart';
 import 'package:project_jordan/components/text_fileds.dart';
+import 'package:project_jordan/services/auth_services.dart';
 
 class SignUpPage extends StatefulWidget {
   final Function()? onTap;
@@ -143,10 +144,13 @@ class _SignUpPageState extends State<SignUpPage> {
                   height: 10,
                 ),
                 // sign in with google or apple
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    MySqure(imagePath: "images/google.png", onTap: null),
+                    MySqure(
+                      imagePath: "images/google.png",
+                      onTap: () => AuthService().signInWithGoogle(),
+                    ),
                     MySqure(imagePath: "images/apple.png", onTap: null),
                     MySqure(imagePath: "images/ms.png", onTap: null),
                   ],

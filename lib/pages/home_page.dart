@@ -30,6 +30,12 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        actions: [
+          IconButton(
+              icon: const Icon(Icons.logout), onPressed: () => signOut()),
+        ],
+      ),
       body: FutureBuilder(
         future: getTeams(),
         builder: (context, snapshot) {
