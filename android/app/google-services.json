@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "212906666067",
+    "project_id": "project-jordan-543dd",
+    "storage_bucket": "project-jordan-543dd.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:212906666067:android:e22c7b61a24a925620fea6",
+        "android_client_info": {
+          "package_name": "com.example.project_jordan"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "212906666067-6b54ga1m1i7oah6usj2iaslklmq8kmbi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3L1g1TtwfNQmk3QGN9ddR_DHurI9uItM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "212906666067-6b54ga1m1i7oah6usj2iaslklmq8kmbi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
