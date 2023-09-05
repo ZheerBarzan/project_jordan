@@ -72,7 +72,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
 
                 //wellcome text
-                Text('Welcome to NBA',
+                Text('lets create an account',
                     style: GoogleFonts.bebasNeue(
                       fontSize: 30,
                       color: Colors.white,
@@ -106,7 +106,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 const SizedBox(
                   height: 10,
                 ),
-                MyButtons(ontap: signUserUp, text: "LOGIN"),
+                MyButtons(ontap: signUserUp, text: "SIGN UP"),
                 const SizedBox(
                   height: 10,
                 ),
@@ -148,8 +148,8 @@ class _SignUpPageState extends State<SignUpPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     MySqure(
-                      imagePath: "images/google.png",
                       onTap: () => AuthService().signInWithGoogle(),
+                      imagePath: "images/google.png",
                     ),
                     MySqure(imagePath: "images/apple.png", onTap: null),
                     MySqure(imagePath: "images/ms.png", onTap: null),

@@ -103,7 +103,7 @@ class _SignInPageState extends State<SignInPage> {
                   const SizedBox(
                     height: 20,
                   ),
-                  MyButtons(ontap: signUserIn, text: "LOGIN"),
+                  MyButtons(ontap: signUserIn, text: "LOG IN"),
                   const SizedBox(
                     height: 20,
                   ),
@@ -145,8 +145,9 @@ class _SignInPageState extends State<SignInPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       MySqure(
-                          imagePath: "images/google.png",
-                          onTap: () => AuthService().signInWithGoogle()),
+                        onTap: () => AuthService().signInWithGoogle(),
+                        imagePath: "images/google.png",
+                      ),
                       MySqure(imagePath: "images/apple.png", onTap: null),
                       MySqure(imagePath: "images/ms.png", onTap: null),
                     ],
