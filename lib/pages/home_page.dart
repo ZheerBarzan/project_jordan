@@ -6,28 +6,37 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:http/http.dart' as http;
 import 'package:project_jordan/model/Teams.dart';
+import 'package:project_jordan/pages/news_page.dart';
+import 'package:project_jordan/pages/profile_page.dart';
+import 'package:project_jordan/pages/score_page.dart';
+import 'package:project_jordan/pages/stats_page.dart';
 
-class HomePage extends StatelessWidget {
-  HomePage({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   void signOut() {
     FirebaseAuth.instance.signOut();
   }
 
-  List<Team> teams = [];
+  int currentIndex = 0;
 
-  Future getTeams() async {
-    var response = await http.get(Uri.https("balldontlie.io", "api/v1/teams"));
-    var jsonData = jsonDecode(response.body);
+  List pages = [
+    const NewsPage(),
+    const ScorePage(),
+    const StatPage(),
+    const ProfilePage()
+  ];
 
-    for (var eachTeam in jsonData['data']) {
-      final team =
-          Team(abbriviaton: eachTeam['abbreviation'], city: eachTeam['city']);
-      teams.add(team);
-    }
+  void goToPages(index) {
+    setState(() {
+      currentIndex = index;
+    });
   }
-
-  Future getPlayers() async {}
 
   @override
   Widget build(BuildContext context) {
@@ -46,28 +55,7 @@ class HomePage extends StatelessWidget {
               icon: const Icon(Icons.logout), onPressed: () => signOut()),
         ],
       ),
-      body: FutureBuilder(
-        future: getTeams(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            return ListView.builder(
-                itemCount: teams.length,
-                itemBuilder: (
-                  context,
-                  index,
-                ) {
-                  return ListTile(
-                    title: Text(
-                        "${teams[index].abbriviaton}, ${teams[index].city}"),
-                  );
-                });
-          } else {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-        },
-      ),
+      body: pages[currentIndex],
       bottomNavigationBar: Container(
         color: const Color.fromARGB(1023, 20, 68, 144),
         child: Padding(
@@ -75,7 +63,7 @@ class HomePage extends StatelessWidget {
           child: GNav(
             backgroundColor: const Color.fromARGB(1023, 20, 68, 144),
             gap: 8,
-            onTabChange: (value) {},
+            onTabChange: (index) => goToPages(index),
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
             tabs: [
               GButton(
