@@ -35,9 +35,9 @@ dependencies:
     sdk: flutter
   flutter_launcher_icons: ^0.13.1
   google_fonts: ^5.1.0
+  google_nav_bar: ^5.0.6
   google_sign_in: ^6.1.4
   http: ^1.1.0
-
 
 flutter_launcher_icons:
   android: "launcher_icon"
