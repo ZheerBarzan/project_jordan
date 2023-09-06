@@ -1,15 +1,11 @@
-import 'dart:convert';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
-import 'package:http/http.dart' as http;
-import 'package:project_jordan/model/Teams.dart';
-import 'package:project_jordan/pages/news_page.dart';
-import 'package:project_jordan/pages/profile_page.dart';
-import 'package:project_jordan/pages/score_page.dart';
-import 'package:project_jordan/pages/stats_page.dart';
+import 'package:project_jordan/UI/news_page.dart';
+import 'package:project_jordan/UI/profile_page.dart';
+import 'package:project_jordan/UI/score_page.dart';
+import 'package:project_jordan/UI/stats_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -42,13 +38,24 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(1023, 20, 68, 144),
-        title: Text(
-          "NBA",
-          style: GoogleFonts.bebasNeue(
-            fontSize: 30,
-            color: Colors.white,
-          ),
+        backgroundColor: const Color.fromARGB(1023, 2, 84, 166),
+        title: Row(
+          children: <Widget>[
+            Image.asset(
+              'images/x.png',
+              height: 50,
+            ),
+            const SizedBox(
+              width: 10,
+            ),
+            Text(
+              "NBA",
+              style: GoogleFonts.bebasNeue(
+                fontSize: 30,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
         actions: [
           IconButton(
