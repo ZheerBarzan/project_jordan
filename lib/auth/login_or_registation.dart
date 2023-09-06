@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:project_jordan/pages/sign_in_page.dart';
-import 'package:project_jordan/pages/sign_up_page.dart';
+import 'package:project_jordan/auth/sign_in_page.dart';
+import 'package:project_jordan/auth/sign_up_page.dart';
 
 class LoginOrRegistrationPages extends StatefulWidget {
   const LoginOrRegistrationPages({super.key});

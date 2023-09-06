@@ -81,7 +81,7 @@ class _HomePageState extends State<HomePage> {
                 iconColor: Colors.white,
                 text: "news",
                 textStyle: GoogleFonts.bebasNeue(
-                  fontSize: 30,
+                  fontSize: 20,
                   color: Colors.white,
                 ),
               ),
@@ -93,7 +93,7 @@ class _HomePageState extends State<HomePage> {
                 iconColor: Colors.white,
                 text: "score",
                 textStyle: GoogleFonts.bebasNeue(
-                  fontSize: 30,
+                  fontSize: 20,
                   color: Colors.white,
                 ),
               ),
@@ -105,7 +105,7 @@ class _HomePageState extends State<HomePage> {
                 iconColor: Colors.white,
                 text: "stats",
                 textStyle: GoogleFonts.bebasNeue(
-                  fontSize: 30,
+                  fontSize: 20,
                   color: Colors.white,
                 ),
               ),
@@ -117,7 +117,7 @@ class _HomePageState extends State<HomePage> {
                 iconColor: Colors.white,
                 text: "profile",
                 textStyle: GoogleFonts.bebasNeue(
-                  fontSize: 30,
+                  fontSize: 20,
                   color: Colors.white,
                 ),
               ),
