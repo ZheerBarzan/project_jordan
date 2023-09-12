@@ -10,12 +10,12 @@ class NewsApi {
 
   Future<List<Article>> fetchArticles(String catagory) async {
     var url = NewsApi.baseUrl;
-    catagory = "nba";
 
     url += '/top-headlines';
     url += '?apiKey=$apiKey';
     url += "&language=en";
-    url += "&category=$catagory";
+    url += "&category=Sports";
+    url += "&q=$catagory";
 
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
