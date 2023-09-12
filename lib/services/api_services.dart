@@ -1,29 +1,36 @@
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:project_jordan/model/news_model.dart';
 
-class ApiService {
-  final String apiKey = 'c212bebdac9741d3870383d4ca2d4e1f';
-  final String newsApiEndpoint = 'https://newsapi.org/v2/everything';
+class NewsApi {
+  const NewsApi();
 
-  Future<List<Map<String, dynamic>>> fetchNbaNews() async {
-    final Map<String, String> queryParams = {
-      'q': 'NBA',
-      'apiKey': apiKey,
-    };
+  static const baseUrl = "https://newsapi.org/v2";
+  static const apiKey = "c212bebdac9741d3870383d4ca2d4e1f";
 
-    final Uri uri =
-        Uri.parse(newsApiEndpoint).replace(queryParameters: queryParams);
+  Future<List<Article>> fetchArticles(String catagory) async {
+    var url = NewsApi.baseUrl;
+    catagory = "nba";
 
-    final response = await http.get(uri);
+    url += '/top-headlines';
+    url += '?apiKey=$apiKey';
+    url += "&language=en";
+    url += "&category=$catagory";
 
+    final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
-      final Map<String, dynamic> responseData = json.decode(response.body);
-
-      if (responseData.containsKey('articles')) {
-        return List<Map<String, dynamic>>.from(responseData['articles']);
+      final json = jsonDecode(response.body);
+      if (json['status'] == "ok") {
+        final dynamic articleJSON = json['articles'] ?? [];
+        final List<Article> articles = articleJSON.map<Article>((e) {
+          return Article.fromJson(e);
+        }).toList();
+        return articles;
+      } else {
+        throw Exception(json['messege'] ?? 'Failed to load ');
       }
+    } else {
+      throw Exception("bad respose");
     }
-
-    return [];
   }
 }
