@@ -1,7 +1,12 @@
+import 'dart:math';
+
+import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:project_jordan/model/news_model.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 class NewsItem extends StatelessWidget {
   final Article article;
@@ -53,7 +58,20 @@ class NewsItem extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Container(),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Container(
+                  child: Text(
+                    article.description,
+                    style: GoogleFonts.bebasNeue(
+                      fontSize: 18,
+                      color: Colors.grey.shade600,
+                    ),
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(
@@ -63,8 +81,34 @@ class NewsItem extends StatelessWidget {
                       Expanded(
                         child: Text(
                           article.captionText(),
-                          style: const TextStyle(fontSize: 20),
+                          style: GoogleFonts.bebasNeue(
+                            fontSize: 30,
+                            color: Color.fromARGB(255, 0, 0, 0),
+                          ),
                         ),
+                      ),
+                      IconButton(
+                        onPressed: () async {
+                          if (!await launchUrlString(article.url)) {
+                            log('couldnt lunch the URL${article.url}' as num);
+                          }
+                        },
+                        icon: const Icon(Icons.open_in_new_outlined),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          Share.share("check out this article ${article.url}");
+                        },
+                        icon: const Icon(Icons.send),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          FlutterClipboard.copy(article.url)
+                              .then((value) => SnackBar(
+                                    content: const Text("copied"),
+                                  ));
+                        },
+                        icon: const Icon(Icons.copy),
                       ),
                     ],
                   ),
@@ -79,63 +123,38 @@ class NewsItem extends StatelessWidget {
 }
 
 
-
 /*
-Card(
-      child: Container(
-        height: 600,
-        child: Column(
-          children: <Widget>[
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(5), topRight: Radius.circular(5)),
-              child: Container(
-                width: double.infinity,
-                height: 180,
-                color: Colors.grey.shade300,
-                child: FadeInImage.memoryNetwork(
-                    placeholder: kTransparentImage,
-                    imageErrorBuilder: (context, error, stackTrace) {
-                      return Icon(
-                        Icons.image,
-                        color: Colors.grey.shade600,
-                      );
-                    },
-                    fit: BoxFit.cover,
-                    image: article.urlToImage ??
-                        "https://via.placeholder.com/108"),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(
-                top: 8,
-                left: 8,
-                right: 8,
-              ),
-              child: Text(
-                article.title,
-                style: const TextStyle(fontSize: 20),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 8, left: 8, right: 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        article.captionText(),
-                        style: const TextStyle(fontSize: 20),
+DropDownButton(
+                        title: const Icon(FluentIcons.share),
+                        items: [
+                          MenuFlyoutItem(
+                            text: const Text("Open in browser"),
+                            leading: const Icon(FluentIcons.edge_logo),
+                            onPressed: () async {
+                              if (!await launchUrlString(article.url)) {
+                                log('couldnt lunch the URL${article.url}'
+                                    as num);
+                              }
+                            },
+                          ),
+                          MenuFlyoutItem(
+                            text: const Text("Send"),
+                            leading: const Icon(FluentIcons.send),
+                            onPressed: () {
+                              Share.share(
+                                  "check out this article ${article.url}");
+                            },
+                          ),
+                          MenuFlyoutItem(
+                            text: const Text("Copy URL"),
+                            leading: const Icon(FluentIcons.copy),
+                            onPressed: () {
+                              FlutterClipboard.copy(article.url).then((value) =>
+                                  showCopySnackBar(context, article.url));
+                            },
+                          ),
+                        ],
                       ),
-                    )
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
- */
+                    ],
+                  ),
+                ),*/

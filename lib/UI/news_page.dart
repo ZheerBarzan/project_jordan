@@ -6,6 +6,6 @@ class NewsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: NewsListPage());
+    return const Scaffold(body: NewsListPage());
   }
 }
