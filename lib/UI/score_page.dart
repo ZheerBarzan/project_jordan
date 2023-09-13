@@ -19,8 +19,13 @@ class _ScorePageState extends State<ScorePage> {
     var jsonData = jsonDecode(response.body);
 
     for (var eachTeam in jsonData['data']) {
-      final team =
-          Team(abbriviaton: eachTeam['abbreviation'], city: eachTeam['city']);
+      final team = Team(
+        abbriviaton: eachTeam['abbreviation'],
+        city: eachTeam['city'],
+        conference: eachTeam['conference']['name'] ?? '',
+        division: eachTeam['division']['name'] ?? '',
+        full_name: eachTeam['full_name'],
+      );
       teams.add(team);
     }
   }
