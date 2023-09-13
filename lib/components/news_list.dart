@@ -30,6 +30,7 @@ class _NewsListPageState extends State<NewsListPage> {
         builder: (context, snapshot) {
           return snapshot.hasData
               ? ListView.builder(
+                  itemCount: snapshot.data!.length,
                   itemBuilder: (context, index) {
                     return NewsItem(
                       article: snapshot.data![index],

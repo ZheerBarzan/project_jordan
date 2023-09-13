@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:project_jordan/model/news_model.dart';
 import 'package:transparent_image/transparent_image.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class NewsItem extends StatelessWidget {
   final Article article;
@@ -11,18 +12,66 @@ class NewsItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Container(
-        child: Column(
-          children: <Widget>[
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(10),
-                topRight: Radius.circular(10),
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Card(
+        child: Container(
+          height: 500,
+          width: double.infinity,
+          child: Column(
+            children: <Widget>[
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(10),
+                  topRight: Radius.circular(10),
+                ),
+                child: Container(
+                  height: 250,
+                  width: double.infinity,
+                  child: FadeInImage.memoryNetwork(
+                      placeholder: kTransparentImage,
+                      imageErrorBuilder: (context, error, stackTrace) {
+                        return Icon(
+                          Icons.image,
+                          color: Colors.grey.shade600,
+                        );
+                      },
+                      fit: BoxFit.cover,
+                      image: article.urlToImage ??
+                          "https://via.placeholder.com/108"),
+                ),
               ),
-              child: Container(),
-            )
-          ],
+              Padding(
+                padding: const EdgeInsets.only(top: 8, left: 8, right: 8),
+                child: Text(
+                  article.title,
+                  style: GoogleFonts.bebasNeue(
+                    fontSize: 30,
+                    color: Colors.black,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Container(),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                      top: 8, left: 8, right: 8, bottom: 10),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          article.captionText(),
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
