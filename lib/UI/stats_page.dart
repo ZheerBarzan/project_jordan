@@ -20,12 +20,13 @@ class _StatPageState extends State<StatPage> {
 
     for (var eachTeam in jsonData['data']) {
       final team = Team(
-        abbriviaton: eachTeam['abbreviation'],
-        city: eachTeam['city'],
-        conference: eachTeam['conference'],
-        division: eachTeam['division'],
-        full_name: eachTeam['full_name'],
-      );
+          id: eachTeam['id'],
+          abbreviation: eachTeam['abbreviation'],
+          city: eachTeam['city'],
+          conference: eachTeam['conference'],
+          division: eachTeam['division'],
+          fullName: eachTeam['full_name'],
+          name: eachTeam['name']);
       teams.add(team);
     }
   }
@@ -45,7 +46,7 @@ class _StatPageState extends State<StatPage> {
                 ) {
                   return ListTile(
                     title: Text(
-                        "${teams[index].abbriviaton}, ${teams[index].city} , ${teams[index].full_name}"),
+                        "${teams[index].abbreviation}, ${teams[index].city} , ${teams[index].fullName}"),
                   );
                 });
           } else {

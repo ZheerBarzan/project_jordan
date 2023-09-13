@@ -20,12 +20,13 @@ class _ScorePageState extends State<ScorePage> {
 
     for (var eachTeam in jsonData['data']) {
       final team = Team(
-        abbriviaton: eachTeam['abbreviation'],
-        city: eachTeam['city'],
-        conference: eachTeam['conference']['name'] ?? '',
-        division: eachTeam['division']['name'] ?? '',
-        full_name: eachTeam['full_name'],
-      );
+          id: eachTeam['id'],
+          abbreviation: eachTeam['abbreviation'],
+          city: eachTeam['city'],
+          conference: eachTeam['conference'],
+          division: eachTeam['division'],
+          fullName: eachTeam['full_name'],
+          name: eachTeam['name']);
       teams.add(team);
     }
   }
@@ -47,7 +48,7 @@ class _ScorePageState extends State<ScorePage> {
                 ) {
                   return ListTile(
                     title: Text(
-                        "${teams[index].abbriviaton}, ${teams[index].city}"),
+                        "${teams[index].abbreviation}, ${teams[index].city}"),
                   );
                 });
           } else {
