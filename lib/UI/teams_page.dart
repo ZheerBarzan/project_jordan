@@ -1,17 +1,16 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:project_jordan/model/teams.dart';
 import 'package:http/http.dart' as http;
 
-class StatPage extends StatefulWidget {
-  const StatPage({super.key});
+class TeamsPage extends StatefulWidget {
+  const TeamsPage({super.key});
 
   @override
-  State<StatPage> createState() => _StatPageState();
+  State<TeamsPage> createState() => _TeamsPageState();
 }
 
-class _StatPageState extends State<StatPage> {
+class _TeamsPageState extends State<TeamsPage> {
   List<Team> teams = [];
 
   Future getTeams() async {

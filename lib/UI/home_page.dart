@@ -5,7 +5,7 @@ import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:project_jordan/UI/news_page.dart';
 import 'package:project_jordan/UI/profile_page.dart';
 import 'package:project_jordan/UI/score_page.dart';
-import 'package:project_jordan/UI/stats_page.dart';
+import 'package:project_jordan/UI/teams_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -24,7 +24,7 @@ class _HomePageState extends State<HomePage> {
   List pages = [
     const NewsPage(),
     const ScorePage(),
-    const StatPage(),
+    const TeamsPage(),
     const ProfilePage()
   ];
 
