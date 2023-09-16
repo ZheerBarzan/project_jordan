@@ -34,6 +34,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: 70,
         centerTitle: true,
         backgroundColor: const Color.fromARGB(1023, 2, 84, 166),
         title: Row(

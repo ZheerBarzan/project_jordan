@@ -30,6 +30,10 @@ class _TeamsPageState extends State<TeamsPage> {
     }
   }
 
+  Map<String, Image> nbaLogos = {
+    "LAL": Image.asset('images/nba/LAL.png'),
+  };
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,8 +48,17 @@ class _TeamsPageState extends State<TeamsPage> {
                   index,
                 ) {
                   return ListTile(
-                    title: Text(
-                        "${teams[index].abbreviation}, ${teams[index].city} , ${teams[index].fullName}"),
+                    title: Row(
+                      children: [
+                        Image.asset(
+                          'images/nba/LAL.png',
+                          height: 20,
+                          width: 20,
+                        ),
+                        Text(
+                            "${teams[index].abbreviation}, ${teams[index].city} , ${teams[index].fullName}"),
+                      ],
+                    ),
                   );
                 });
           } else {
