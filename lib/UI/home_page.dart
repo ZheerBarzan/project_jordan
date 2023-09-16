@@ -38,8 +38,10 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         backgroundColor: const Color.fromARGB(1023, 2, 84, 166),
         title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Image.asset(
               'images/x.png',
