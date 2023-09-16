@@ -106,7 +106,11 @@ class _SignUpPageState extends State<SignUpPage> {
                 const SizedBox(
                   height: 10,
                 ),
-                MyButtons(ontap: signUserUp, text: "SIGN UP"),
+                MyButtons(
+                  ontap: signUserUp,
+                  text: "SIGN UP",
+                  color: Colors.red,
+                ),
                 const SizedBox(
                   height: 10,
                 ),

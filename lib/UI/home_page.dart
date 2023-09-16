@@ -15,10 +15,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  void signOut() {
-    FirebaseAuth.instance.signOut();
-  }
-
   int currentIndex = 0;
 
   List pages = [
@@ -59,10 +55,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
-        actions: [
-          IconButton(
-              icon: const Icon(Icons.logout), onPressed: () => signOut()),
-        ],
       ),
       body: pages[currentIndex],
       bottomNavigationBar: Container(

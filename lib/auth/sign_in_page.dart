@@ -103,7 +103,11 @@ class _SignInPageState extends State<SignInPage> {
                   const SizedBox(
                     height: 20,
                   ),
-                  MyButtons(ontap: signUserIn, text: "LOG IN"),
+                  MyButtons(
+                    ontap: signUserIn,
+                    text: "LOG IN",
+                    color: Colors.red,
+                  ),
                   const SizedBox(
                     height: 20,
                   ),
