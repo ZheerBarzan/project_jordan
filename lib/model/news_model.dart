@@ -23,14 +23,41 @@ class Article {
     return "$source $formattedPublishedAt";
   }
 
+  bool get hasEssentialContent =>
+      title.trim().isNotEmpty &&
+      url.trim().isNotEmpty &&
+      source.trim().isNotEmpty;
+
+  String get dedupeKey {
+    final Uri? uri = Uri.tryParse(url);
+    if (uri != null && uri.host.isNotEmpty) {
+      final String path = uri.path.replaceAll(RegExp(r'/$'), '');
+      return '${uri.host.toLowerCase()}$path';
+    }
+
+    return title.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), ' ').trim();
+  }
+
   factory Article.fromJson(Map<String, dynamic> json) {
     return Article(
-      title: json['title'] ?? "",
-      description: json['description'] ?? "",
-      url: json['url'] ?? "",
+      title: (json['title'] ?? "").toString(),
+      description: (json['description'] ?? "").toString(),
+      url: (json['url'] ?? "").toString(),
       publishedAt: DateTime.tryParse(json['publishedAt']) ?? DateTime.now(),
-      source: json['source']['name'],
+      source: (json['source']?['name'] ?? "").toString(),
       urlToImage: json['urlToImage'],
+    );
+  }
+
+  factory Article.fromGNewsJson(Map<String, dynamic> json) {
+    return Article(
+      title: (json['title'] ?? "").toString(),
+      description: (json['description'] ?? "").toString(),
+      url: (json['url'] ?? "").toString(),
+      publishedAt: DateTime.tryParse(json['publishedAt']?.toString() ?? '') ??
+          DateTime.now(),
+      source: (json['source']?['name'] ?? "").toString(),
+      urlToImage: json['image']?.toString(),
     );
   }
 }

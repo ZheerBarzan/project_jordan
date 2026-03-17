@@ -4,7 +4,8 @@ import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:project_jordan/UI/news_page.dart';
 import 'package:project_jordan/UI/profile_page.dart';
 import 'package:project_jordan/UI/score_page.dart';
-import 'package:project_jordan/UI/teams_page.dart';
+import 'package:project_jordan/UI/stats_page.dart';
+import 'package:project_jordan/theme/app_theme.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,10 +17,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int currentIndex = 0;
 
-  final List<Widget> pages = <Widget>[
-    const NewsPage(),
-    const ScorePage(),
-    const TeamsPage(),
+  late final List<Widget> pages = <Widget>[
+    NewsPage(),
+    ScorePage(),
+    StatsPage(),
     const ProfilePage(),
   ];
 
@@ -33,9 +34,20 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 70,
+        toolbarHeight: 84,
         centerTitle: true,
-        backgroundColor: const Color.fromARGB(1023, 2, 84, 166),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: <Color>[
+                AppTheme.nbaBlue,
+                AppTheme.courtBlue,
+              ],
+            ),
+          ),
+        ),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
@@ -43,18 +55,32 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(width: 10),
             Text(
               "NBA",
-              style: GoogleFonts.bebasNeue(fontSize: 30, color: Colors.white),
+              style: GoogleFonts.bebasNeue(
+                fontSize: 34,
+                color: Colors.white,
+                letterSpacing: 0.6,
+              ),
             ),
           ],
         ),
       ),
-      body: pages[currentIndex],
+      body: IndexedStack(index: currentIndex, children: pages),
       bottomNavigationBar: Container(
-        color: const Color.fromARGB(1023, 20, 68, 144),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: <Color>[
+              AppTheme.courtBlue,
+              AppTheme.nbaBlue,
+            ],
+          ),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: GNav(
-            backgroundColor: const Color.fromARGB(1023, 20, 68, 144),
+            selectedIndex: currentIndex,
+            backgroundColor: Colors.transparent,
             gap: 8,
             onTabChange: (index) => goToPages(index),
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
@@ -62,7 +88,7 @@ class _HomePageState extends State<HomePage> {
               GButton(
                 borderRadius: BorderRadius.circular(25),
                 icon: Icons.newspaper,
-                backgroundColor: Colors.red,
+                backgroundColor: AppTheme.accentRed,
                 iconActiveColor: Colors.white,
                 iconColor: Colors.white,
                 text: "news",
@@ -74,7 +100,7 @@ class _HomePageState extends State<HomePage> {
               GButton(
                 borderRadius: BorderRadius.circular(25),
                 icon: Icons.scoreboard_outlined,
-                backgroundColor: Colors.red,
+                backgroundColor: AppTheme.accentRed,
                 iconActiveColor: Colors.white,
                 iconColor: Colors.white,
                 text: "score",
@@ -86,7 +112,7 @@ class _HomePageState extends State<HomePage> {
               GButton(
                 borderRadius: BorderRadius.circular(25),
                 icon: Icons.stacked_bar_chart_rounded,
-                backgroundColor: Colors.red,
+                backgroundColor: AppTheme.accentRed,
                 iconActiveColor: Colors.white,
                 iconColor: Colors.white,
                 text: "stats",
@@ -98,7 +124,7 @@ class _HomePageState extends State<HomePage> {
               GButton(
                 borderRadius: BorderRadius.circular(25),
                 icon: Icons.account_box_rounded,
-                backgroundColor: Colors.red,
+                backgroundColor: AppTheme.accentRed,
                 iconActiveColor: Colors.white,
                 iconColor: Colors.white,
                 text: "profile",
@@ -111,6 +137,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
+      extendBody: true,
     );
   }
 }

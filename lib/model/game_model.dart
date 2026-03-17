@@ -10,6 +10,7 @@ class Game {
   final String status;
   final String time;
   final bool postseason;
+  final bool postponed;
   final Team homeTeam;
   final Team visitorTeam;
 
@@ -23,21 +24,36 @@ class Game {
     required this.status,
     required this.time,
     required this.postseason,
+    required this.postponed,
     required this.homeTeam,
     required this.visitorTeam,
   });
 
+  DateTime get parsedDate =>
+      DateTime.tryParse(date)?.toLocal() ?? DateTime.now();
+
+  bool get isLive =>
+      status.contains('Qtr') ||
+      status == 'Halftime' ||
+      status == 'Overtime' ||
+      status == 'End of Regulation';
+
+  bool get isFinal => status == 'Final';
+
+  bool get isScheduled => !isLive && !isFinal && !postponed;
+
   factory Game.fromJson(Map<String, dynamic> json) {
     return Game(
-      id: json['id'],
-      date: json['date'],
-      homeTeamScore: json['home_team_score'],
-      visitorTeamScore: json['visitor_team_score'],
-      season: json['season'],
-      period: json['period'],
-      status: json['status'],
-      time: json['time'],
-      postseason: json['postseason'],
+      id: json['id'] as int,
+      date: (json['date'] ?? '').toString(),
+      homeTeamScore: json['home_team_score'] as int? ?? 0,
+      visitorTeamScore: json['visitor_team_score'] as int? ?? 0,
+      season: json['season'] as int? ?? 0,
+      period: json['period'] as int? ?? 0,
+      status: (json['status'] ?? '').toString(),
+      time: (json['time'] ?? '').toString(),
+      postseason: json['postseason'] as bool? ?? false,
+      postponed: json['postponed'] as bool? ?? false,
       homeTeam: Team.fromJson(json['home_team']),
       visitorTeam: Team.fromJson(json['visitor_team']),
     );

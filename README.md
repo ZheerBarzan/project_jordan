@@ -41,7 +41,7 @@ Flutter app for NBA news, scores, teams, and Firebase authentication.
 
 ## Runtime configuration
 
-### Required for scores and teams
+### Required for scores and scoreboard
 
 BALLDONTLIE now requires an API key. Provide it with:
 
@@ -49,8 +49,34 @@ BALLDONTLIE now requires an API key. Provide it with:
 flutter run --dart-define=BALLDONTLIE_API_KEY=your_api_key
 ```
 
-Without this key, the app still launches, but the score and teams tabs show a
+Without this key, the app still launches, but the score and stats tabs show a
 clear configuration error instead of hanging.
+
+### Required for the primary news feed
+
+The redesigned news page uses NewsAPI as the primary source:
+
+```bash
+flutter run --dart-define=NEWSAPI_API_KEY=your_newsapi_key
+```
+
+### Optional fallback news provider
+
+To enable the GNews fallback/merge path:
+
+```bash
+flutter run --dart-define=GNEWS_API_KEY=your_gnews_key
+```
+
+If only one news provider key is configured, the app still works with that
+single provider.
+
+### Premium stats note
+
+The stats dashboard uses BALLDONTLIE standings, leaders, and team season
+averages. Those endpoints may require a higher BALLDONTLIE plan than the basic
+games/teams endpoints. If your key does not have access, the app shows partial
+data warnings instead of crashing.
 
 ### Optional for native Google Sign-In
 
@@ -66,8 +92,8 @@ flutter run --dart-define=GOOGLE_SIGN_IN_SERVER_CLIENT_ID=your_server_client_id
 flutter pub get
 flutter analyze
 flutter test
-flutter run -d emulator-5554 --dart-define=BALLDONTLIE_API_KEY=your_api_key
-flutter run -d chrome --web-hostname localhost --web-port 7357 --dart-define=BALLDONTLIE_API_KEY=your_api_key
+flutter run -d emulator-5554 --dart-define=BALLDONTLIE_API_KEY=your_api_key --dart-define=NEWSAPI_API_KEY=your_newsapi_key --dart-define=GNEWS_API_KEY=your_gnews_key
+flutter run -d chrome --web-hostname localhost --web-port 7357 --dart-define=BALLDONTLIE_API_KEY=your_api_key --dart-define=NEWSAPI_API_KEY=your_newsapi_key --dart-define=GNEWS_API_KEY=your_gnews_key
 ```
 
 ## VS Code
@@ -81,7 +107,8 @@ The repo includes:
 ## Notes
 
 - The current visual theme and screen flow were intentionally preserved during
-  modernization.
-- News uses the bundled NewsAPI key already present in the project.
+  modernization while the page layouts were redesigned.
+- News no longer uses a bundled API key. Configure `NEWSAPI_API_KEY` and
+  optionally `GNEWS_API_KEY` at runtime.
 - Web uses Firebase Auth for Google popup sign-in so the existing custom button
   can remain in place.

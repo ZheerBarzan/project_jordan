@@ -19,13 +19,13 @@ class Team {
 
   factory Team.fromJson(Map<String, dynamic> json) {
     return Team(
-      id: json['id'],
-      abbreviation: json['abbreviation'],
-      city: json['city'],
-      conference: json['conference'],
-      division: json['division'],
-      fullName: json['full_name'],
-      name: json['name'],
+      id: json['id'] as int? ?? 0,
+      abbreviation: (json['abbreviation'] ?? '').toString(),
+      city: (json['city'] ?? '').toString(),
+      conference: (json['conference'] ?? '').toString(),
+      division: (json['division'] ?? '').toString(),
+      fullName: (json['full_name'] ?? '').toString(),
+      name: (json['name'] ?? '').toString(),
     );
   }
 }
