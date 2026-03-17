@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class MySqure extends StatelessWidget {
   final String imagePath;
-  final Function()? onTap;
+  final VoidCallback? onTap;
   const MySqure({super.key, required this.imagePath, required this.onTap});
 
   @override
@@ -10,16 +10,13 @@ class MySqure extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),
           border: Border.all(color: Colors.white),
           color: Colors.white,
         ),
-        child: Image.asset(
-          imagePath,
-          height: 40,
-        ),
+        child: Image.asset(imagePath, height: 40),
       ),
     );
   }

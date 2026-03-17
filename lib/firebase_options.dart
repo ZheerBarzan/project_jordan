@@ -70,7 +70,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '212906666067',
     projectId: 'project-jordan-543dd',
     storageBucket: 'project-jordan-543dd.appspot.com',
-    iosClientId: '212906666067-8ckei96t5gnggqt0u2354eb3eikmdh4p.apps.googleusercontent.com',
+    iosClientId:
+        '212906666067-8ckei96t5gnggqt0u2354eb3eikmdh4p.apps.googleusercontent.com',
     iosBundleId: 'com.example.projectJordan',
   );
 }

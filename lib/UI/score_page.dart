@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:project_jordan/model/game_model.dart';
-import 'package:project_jordan/model/teams.dart';
-import 'package:http/http.dart' as http;
+import 'package:project_jordan/services/nba_api_service.dart';
 
 class ScorePage extends StatefulWidget {
   const ScorePage({super.key});
@@ -12,43 +10,48 @@ class ScorePage extends StatefulWidget {
 }
 
 class _ScorePageState extends State<ScorePage> {
-  List<Game> games = [];
+  final NbaApiService _nbaApiService = NbaApiService();
+  late final Future<List<Game>> _futureGames;
 
-  Future getGames() async {
-    var response = await http.get(Uri.https("balldontlie.io", "api/v1/game/"));
-    var jsonData = jsonDecode(response.body);
-
-    for (var eachTeam in jsonData['data']) {
-      final team = Game(
-        id: eachTeam['id'],
-        date: eachTeam['date'],
-        homeTeam: eachTeam['home_team'],
-        period: eachTeam['period'],
-        homeTeamScore: eachTeam['id'],
-        time: eachTeam['id'],
-        postseason: eachTeam['id'],
-        season: eachTeam['id'],
-        status: eachTeam['id'],
-        visitorTeam: eachTeam['id'],
-        visitorTeamScore: eachTeam['id'],
-      );
-      games.add(team);
-    }
+  @override
+  void initState() {
+    super.initState();
+    _futureGames = _nbaApiService.fetchGames();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: FutureBuilder(
-        future: getGames(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
+      body: FutureBuilder<List<Game>>(
+        future: _futureGames,
+        builder: (BuildContext context, AsyncSnapshot<List<Game>> snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text(
+                  snapshot.error.toString(),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
+
+          if (snapshot.hasData) {
+            final List<Game> games = snapshot.data!;
             return ListView.builder(
               itemCount: games.length,
-              itemBuilder: (context, index) {
+              itemBuilder: (BuildContext context, int index) {
+                final Game game = games[index];
                 return ListTile(
                   title: Text(
-                      "${games[index].id}\n${games[index].date} VS ${games[index].period}"),
+                    '${game.homeTeam.fullName} ${game.homeTeamScore}'
+                    '\n${game.visitorTeam.fullName} ${game.visitorTeamScore}'
+                    '\n${game.status}',
+                  ),
+                  subtitle: Text(
+                    'Season ${game.season} • Period ${game.period}',
+                  ),
                 );
               },
             );

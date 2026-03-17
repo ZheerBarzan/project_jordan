@@ -4,10 +4,8 @@ import 'package:project_jordan/model/news_model.dart';
 import 'package:project_jordan/services/api_services.dart';
 
 class NewsListPage extends StatefulWidget {
-  final NewsApi newsApi = const NewsApi();
-  const NewsListPage({
-    super.key,
-  });
+  final NewsApi? newsApi;
+  const NewsListPage({super.key, this.newsApi});
 
   @override
   State<NewsListPage> createState() => _NewsListPageState();
@@ -19,7 +17,7 @@ class _NewsListPageState extends State<NewsListPage> {
   @override
   void initState() {
     super.initState();
-    futureArticles = widget.newsApi.fetchArticles("nba");
+    futureArticles = (widget.newsApi ?? NewsApi()).fetchArticles("nba");
   }
 
   @override
@@ -27,23 +25,36 @@ class _NewsListPageState extends State<NewsListPage> {
     return Scaffold(
       body: FutureBuilder<List<Article>>(
         future: futureArticles,
-        builder: (context, snapshot) {
-          return snapshot.hasData
-              ? ListView.builder(
-                  itemCount: snapshot.data!.length,
-                  itemBuilder: (context, index) {
-                    return NewsItem(
-                      article: snapshot.data![index],
-                    );
-                  },
-                )
-              : const Center(
-                  child: SizedBox(
-                    height: 30,
-                    width: 30,
-                    child: CircularProgressIndicator(),
-                  ),
-                );
+        builder: (BuildContext context, AsyncSnapshot<List<Article>> snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text(
+                  snapshot.error.toString(),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
+
+          if (snapshot.hasData) {
+            final List<Article> articles = snapshot.data!;
+            return ListView.builder(
+              itemCount: articles.length,
+              itemBuilder: (BuildContext context, int index) {
+                return NewsItem(article: articles[index]);
+              },
+            );
+          }
+
+          return const Center(
+            child: SizedBox(
+              height: 30,
+              width: 30,
+              child: CircularProgressIndicator(),
+            ),
+          );
         },
       ),
     );

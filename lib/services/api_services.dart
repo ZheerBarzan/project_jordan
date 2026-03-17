@@ -3,34 +3,39 @@ import 'package:http/http.dart' as http;
 import 'package:project_jordan/model/news_model.dart';
 
 class NewsApi {
-  const NewsApi();
+  NewsApi({http.Client? client}) : _client = client ?? http.Client();
 
-  static const baseUrl = "https://newsapi.org/v2";
-  static const apiKey = "c212bebdac9741d3870383d4ca2d4e1f";
+  static const String _authority = 'newsapi.org';
+  static const String _apiKey = 'c212bebdac9741d3870383d4ca2d4e1f';
 
-  Future<List<Article>> fetchArticles(String catagory) async {
-    var url = NewsApi.baseUrl;
+  final http.Client _client;
 
-    url += '/top-headlines';
-    url += '?apiKey=$apiKey';
-    url += "&language=en";
-    url += "&category=Sports";
-    url += "&q=$catagory";
-
-    final response = await http.get(Uri.parse(url));
+  Future<List<Article>> fetchArticles(String category) async {
+    final Uri uri = Uri.https(_authority, '/v2/top-headlines', <String, String>{
+      'apiKey': _apiKey,
+      'language': 'en',
+      'category': 'sports',
+      'q': category,
+    });
+    final http.Response response = await _client.get(uri);
     if (response.statusCode == 200) {
-      final json = jsonDecode(response.body);
+      final Map<String, dynamic> json =
+          jsonDecode(response.body) as Map<String, dynamic>;
       if (json['status'] == "ok") {
-        final dynamic articleJSON = json['articles'] ?? [];
-        final List<Article> articles = articleJSON.map<Article>((e) {
-          return Article.fromJson(e);
-        }).toList();
+        final List<dynamic> articleJson =
+            json['articles'] as List<dynamic>? ?? <dynamic>[];
+        final List<Article> articles = articleJson
+            .map(
+              (dynamic article) =>
+                  Article.fromJson(article as Map<String, dynamic>),
+            )
+            .toList();
         return articles;
-      } else {
-        throw Exception(json['messege'] ?? 'Failed to load ');
       }
-    } else {
-      throw Exception("bad respose");
+
+      throw Exception(json['message'] ?? 'Failed to load news.');
     }
+
+    throw Exception('Bad response from News API.');
   }
 }

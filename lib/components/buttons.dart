@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class MyButtons extends StatelessWidget {
-  final Function()? ontap;
+  final VoidCallback? ontap;
   final String text;
   final Color color;
   const MyButtons({
@@ -20,13 +20,14 @@ class MyButtons extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         margin: const EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15), color: color),
+          borderRadius: BorderRadius.circular(15),
+          color: color,
+        ),
         child: Center(
-          child: Text(text,
-              style: GoogleFonts.bebasNeue(
-                fontSize: 30,
-                color: Colors.white,
-              )),
+          child: Text(
+            text,
+            style: GoogleFonts.bebasNeue(fontSize: 30, color: Colors.white),
+          ),
         ),
       ),
     );

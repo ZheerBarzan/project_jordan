@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
@@ -17,14 +16,14 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int currentIndex = 0;
 
-  List pages = [
+  final List<Widget> pages = <Widget>[
     const NewsPage(),
     const ScorePage(),
     const TeamsPage(),
-    const ProfilePage()
+    const ProfilePage(),
   ];
 
-  void goToPages(index) {
+  void goToPages(int index) {
     setState(() {
       currentIndex = index;
     });
@@ -40,19 +39,11 @@ class _HomePageState extends State<HomePage> {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Image.asset(
-              'images/x.png',
-              height: 50,
-            ),
-            const SizedBox(
-              width: 10,
-            ),
+            Image.asset('images/x.png', height: 50),
+            const SizedBox(width: 10),
             Text(
               "NBA",
-              style: GoogleFonts.bebasNeue(
-                fontSize: 30,
-                color: Colors.white,
-              ),
+              style: GoogleFonts.bebasNeue(fontSize: 30, color: Colors.white),
             ),
           ],
         ),
