@@ -1,6 +1,8 @@
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:project_jordan/components/scroll_chrome.dart';
 import 'package:intl/intl.dart';
 import 'package:project_jordan/model/game_model.dart';
 import 'package:project_jordan/repositories/basketball_repository.dart';
@@ -10,10 +12,14 @@ import 'package:project_jordan/theme/app_theme.dart';
 enum _ScoreboardWindow { today, recent, custom }
 
 class ScorePage extends StatefulWidget {
-  ScorePage({super.key, BasketballDataRepository? repository})
-    : repository = repository ?? BasketballRepository();
+  ScorePage({
+    super.key,
+    BasketballDataRepository? repository,
+    this.onChromeVisibilityChanged,
+  }) : repository = repository ?? BasketballRepository();
 
   final BasketballDataRepository repository;
+  final ChromeVisibilityChanged? onChromeVisibilityChanged;
 
   @override
   State<ScorePage> createState() => _ScorePageState();
@@ -72,43 +78,63 @@ class _ScorePageState extends State<ScorePage> {
     return FutureBuilder<List<Game>>(
       future: _futureGames,
       builder: (BuildContext context, AsyncSnapshot<List<Game>> snapshot) {
-        return RefreshIndicator(
-          color: AppTheme.accentRed,
-          onRefresh: _loadGames,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
-            children: <Widget>[
-              Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1120),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      const _ScoreHeader(),
-                      const SizedBox(height: 18),
-                      _ScoreFilters(
-                        currentWindow: _window,
-                        selectedDate: _selectedDate,
-                        onWindowChanged: (_ScoreboardWindow window) {
-                          setState(() {
-                            _window = window;
-                          });
-                          _loadGames();
-                        },
-                        onPickCustomDate: _pickCustomDate,
-                      ),
-                      const SizedBox(height: 18),
-                      _buildBody(context, snapshot),
-                    ],
+        return NotificationListener<UserScrollNotification>(
+          onNotification: _handleScrollNotification,
+          child: RefreshIndicator(
+            color: AppTheme.accentRed,
+            onRefresh: _loadGames,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
+              children: <Widget>[
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1120),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        const _ScoreHeader(),
+                        const SizedBox(height: 18),
+                        _ScoreFilters(
+                          currentWindow: _window,
+                          selectedDate: _selectedDate,
+                          onWindowChanged: (_ScoreboardWindow window) {
+                            setState(() {
+                              _window = window;
+                            });
+                            _loadGames();
+                          },
+                          onPickCustomDate: _pickCustomDate,
+                        ),
+                        const SizedBox(height: 18),
+                        _buildBody(context, snapshot),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
     );
+  }
+
+  bool _handleScrollNotification(UserScrollNotification notification) {
+    final ChromeVisibilityChanged? callback = widget.onChromeVisibilityChanged;
+    if (callback == null || notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
+
+    if (notification.metrics.pixels <= 24) {
+      callback(true);
+    } else if (notification.direction == ScrollDirection.reverse) {
+      callback(false);
+    } else if (notification.direction == ScrollDirection.forward) {
+      callback(true);
+    }
+
+    return false;
   }
 
   Widget _buildBody(BuildContext context, AsyncSnapshot<List<Game>> snapshot) {

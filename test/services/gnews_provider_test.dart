@@ -18,6 +18,7 @@ void main() {
               {
                 "title": "Latest NBA Trade",
                 "description": "Front office update",
+                "content": "Trade market full update",
                 "url": "https://example.com/gnews-story",
                 "publishedAt": "2026-03-17T11:00:00Z",
                 "image": "https://example.com/image.png",
@@ -34,5 +35,6 @@ void main() {
     expect(articles, hasLength(1));
     expect(articles.first.source, 'CBS Sports');
     expect(articles.first.urlToImage, 'https://example.com/image.png');
+    expect(articles.first.content, 'Trade market full update');
   });
 }

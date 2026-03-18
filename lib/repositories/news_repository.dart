@@ -130,6 +130,8 @@ class NewsRepository implements NewsFeedRepository, FallbackAwareRepository {
       publishedAt: publishedAt,
       source: article.source,
       urlToImage: article.urlToImage,
+      author: article.author,
+      content: article.content,
     );
   }
 }

@@ -83,107 +83,100 @@ class _SignInPageState extends State<SignInPage> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: const Color.fromARGB(1023, 20, 68, 144),
-        body: Center(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                // animation
-                Image.asset("images/nba.gif"),
+    return Scaffold(
+      backgroundColor: const Color.fromARGB(1023, 20, 68, 144),
+      body: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // animation
+              Image.asset("images/nba.gif"),
 
-                //wellcome text
-                Text(
-                  'Welcome to NBA',
-                  style: GoogleFonts.bebasNeue(
-                    fontSize: 30,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 10),
+              //wellcome text
+              Text(
+                'Welcome to NBA',
+                style: GoogleFonts.bebasNeue(fontSize: 30, color: Colors.white),
+              ),
+              const SizedBox(height: 10),
 
-                // email text field
-                MyTextField(
-                  controller: usernameController,
-                  hintText: "USER NAME",
-                  obscureText: false,
-                ),
-                const SizedBox(height: 20),
-                // password text field
-                MyTextField(
-                  controller: passwordController,
-                  hintText: "PASSWORD",
-                  obscureText: true,
-                ),
+              // email text field
+              MyTextField(
+                controller: usernameController,
+                hintText: "USER NAME",
+                obscureText: false,
+              ),
+              const SizedBox(height: 20),
+              // password text field
+              MyTextField(
+                controller: passwordController,
+                hintText: "PASSWORD",
+                obscureText: true,
+              ),
 
-                // login button
-                const SizedBox(height: 20),
-                MyButtons(ontap: signUserIn, text: "LOG IN", color: Colors.red),
-                const SizedBox(height: 20),
-                // forget password
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    children: [
-                      const Expanded(
-                        child: Divider(thickness: 0.5, color: Colors.white),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                        child: Text(
-                          'OR CONTINUE WITH',
-                          style: GoogleFonts.bebasNeue(
-                            fontSize: 30,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      const Expanded(
-                        child: Divider(thickness: 0.5, color: Colors.white),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 10),
-                // sign in with google or apple
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              // login button
+              const SizedBox(height: 20),
+              MyButtons(ontap: signUserIn, text: "LOG IN", color: Colors.red),
+              const SizedBox(height: 20),
+              // forget password
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
                   children: [
-                    MySqure(
-                      onTap: signInWithGoogle,
-                      imagePath: "images/google.png",
+                    const Expanded(
+                      child: Divider(thickness: 0.5, color: Colors.white),
                     ),
-                    const MySqure(imagePath: "images/apple.png", onTap: null),
-                    const MySqure(imagePath: "images/ms.png", onTap: null),
-                  ],
-                ),
-                const SizedBox(height: 15),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Not a Member?',
-                      style: GoogleFonts.bebasNeue(
-                        fontSize: 30,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    GestureDetector(
-                      onTap: widget.onTap,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
                       child: Text(
-                        'Register now!',
+                        'OR CONTINUE WITH',
                         style: GoogleFonts.bebasNeue(
                           fontSize: 30,
-                          color: Colors.lightBlue,
+                          color: Colors.white,
                         ),
                       ),
                     ),
+                    const Expanded(
+                      child: Divider(thickness: 0.5, color: Colors.white),
+                    ),
                   ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 10),
+              // sign in with google or apple
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  MySqure(
+                    onTap: signInWithGoogle,
+                    imagePath: "images/google.png",
+                  ),
+                ],
+              ),
+              const SizedBox(height: 15),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Not a Member?',
+                    style: GoogleFonts.bebasNeue(
+                      fontSize: 30,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  GestureDetector(
+                    onTap: widget.onTap,
+                    child: Text(
+                      'Register now!',
+                      style: GoogleFonts.bebasNeue(
+                        fontSize: 30,
+                        color: Colors.lightBlue,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

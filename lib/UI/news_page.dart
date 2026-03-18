@@ -1,20 +1,31 @@
-import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:project_jordan/UI/article_reader_page.dart';
+import 'package:project_jordan/components/scroll_chrome.dart';
 import 'package:project_jordan/model/news_model.dart';
 import 'package:project_jordan/repositories/fallback_aware_repository.dart';
 import 'package:project_jordan/repositories/news_repository.dart';
 import 'package:project_jordan/theme/app_theme.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:transparent_image/transparent_image.dart';
-import 'package:url_launcher/url_launcher.dart';
+
+enum _NewsLayoutMode { list, grid }
+
+typedef ArticleReaderBuilder =
+    Widget Function(BuildContext context, Article article);
 
 class NewsPage extends StatefulWidget {
-  NewsPage({super.key, NewsFeedRepository? repository})
-    : repository = repository ?? NewsRepository();
+  NewsPage({
+    super.key,
+    NewsFeedRepository? repository,
+    this.onChromeVisibilityChanged,
+    this.readerPageBuilder,
+  }) : repository = repository ?? NewsRepository();
 
   final NewsFeedRepository repository;
+  final ChromeVisibilityChanged? onChromeVisibilityChanged;
+  final ArticleReaderBuilder? readerPageBuilder;
 
   @override
   State<NewsPage> createState() => _NewsPageState();
@@ -22,6 +33,7 @@ class NewsPage extends StatefulWidget {
 
 class _NewsPageState extends State<NewsPage> {
   late Future<List<Article>> _futureArticles;
+  _NewsLayoutMode _layoutMode = _NewsLayoutMode.list;
 
   @override
   void initState() {
@@ -41,62 +53,76 @@ class _NewsPageState extends State<NewsPage> {
     return FutureBuilder<List<Article>>(
       future: _futureArticles,
       builder: (BuildContext context, AsyncSnapshot<List<Article>> snapshot) {
-        return RefreshIndicator(
-          color: AppTheme.accentRed,
-          onRefresh: _reload,
-          child: LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
-              return ListView(
+        return NotificationListener<UserScrollNotification>(
+          onNotification: _handleScrollNotification,
+          child: RefreshIndicator(
+            color: AppTheme.accentRed,
+            onRefresh: _reload,
+            child: Scrollbar(
+              child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
                 children: <Widget>[
                   Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 1120),
-                      child: _buildBody(
-                        context,
-                        snapshot,
-                        constraints.maxWidth,
-                      ),
+                      child: _buildBody(context, snapshot),
                     ),
                   ),
                 ],
-              );
-            },
+              ),
+            ),
           ),
         );
       },
     );
   }
 
+  bool _handleScrollNotification(UserScrollNotification notification) {
+    final ChromeVisibilityChanged? callback = widget.onChromeVisibilityChanged;
+    if (callback == null || notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
+
+    if (notification.metrics.pixels <= 24) {
+      callback(true);
+    } else if (notification.direction == ScrollDirection.reverse) {
+      callback(false);
+    } else if (notification.direction == ScrollDirection.forward) {
+      callback(true);
+    }
+
+    return false;
+  }
+
   Widget _buildBody(
     BuildContext context,
     AsyncSnapshot<List<Article>> snapshot,
-    double maxWidth,
   ) {
-    final double contentWidth = maxWidth > 1120 ? 1120 : maxWidth;
+    final bool isUsingFallbackData =
+        widget.repository is FallbackAwareRepository &&
+        (widget.repository as FallbackAwareRepository)
+            .isUsingFallbackData
+            .value;
 
     if (snapshot.connectionState == ConnectionState.waiting) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const _TabHeader(
-            title: 'Latest NBA News',
-            subtitle:
-                'Featured stories, fresh headlines, and a multi-source feed built for quick scanning.',
+          const _NewsHeader(),
+          const SizedBox(height: 18),
+          _NewsToolbar(
+            layoutMode: _layoutMode,
+            onModeChanged: _setLayoutMode,
+            isUsingFallbackData: false,
           ),
-          const SizedBox(height: 48),
-          Center(
-            child: Column(
-              children: <Widget>[
-                const CircularProgressIndicator(),
-                const SizedBox(height: 14),
-                Text(
-                  'Loading the latest headlines...',
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-              ],
-            ),
+          const SizedBox(height: 18),
+          const _NewsStateCard(
+            icon: Icons.auto_stories_outlined,
+            title: 'Loading the latest coverage',
+            message:
+                'Pulling fresh headlines from the live news wires and preparing the reading view.',
+            showProgress: true,
           ),
         ],
       );
@@ -106,14 +132,16 @@ class _NewsPageState extends State<NewsPage> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const _TabHeader(
-            title: 'Latest NBA News',
-            subtitle:
-                'Featured stories, fresh headlines, and a multi-source feed built for quick scanning.',
+          const _NewsHeader(),
+          const SizedBox(height: 18),
+          _NewsToolbar(
+            layoutMode: _layoutMode,
+            onModeChanged: _setLayoutMode,
+            isUsingFallbackData: false,
           ),
-          const SizedBox(height: 22),
-          _FeedbackCard(
-            icon: Icons.error_outline,
+          const SizedBox(height: 18),
+          _NewsStateCard(
+            icon: Icons.error_outline_rounded,
             title: 'News feed unavailable',
             message: snapshot.error.toString(),
             actionLabel: 'Retry',
@@ -128,17 +156,19 @@ class _NewsPageState extends State<NewsPage> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const _TabHeader(
-            title: 'Latest NBA News',
-            subtitle:
-                'Featured stories, fresh headlines, and a multi-source feed built for quick scanning.',
+          const _NewsHeader(),
+          const SizedBox(height: 18),
+          _NewsToolbar(
+            layoutMode: _layoutMode,
+            onModeChanged: _setLayoutMode,
+            isUsingFallbackData: false,
           ),
-          const SizedBox(height: 22),
-          _FeedbackCard(
+          const SizedBox(height: 18),
+          _NewsStateCard(
             icon: Icons.newspaper_outlined,
             title: 'No stories right now',
             message:
-                'The feed came back empty. Pull to refresh or try again in a moment.',
+                'The wire returned an empty feed. Pull to refresh and try again in a moment.',
             actionLabel: 'Refresh',
             onAction: _reload,
           ),
@@ -146,127 +176,201 @@ class _NewsPageState extends State<NewsPage> {
       );
     }
 
-    final Article featuredArticle = articles.first;
-    final List<Article> latestArticles = articles.skip(1).take(4).toList();
-    final List<Article> remainingArticles = articles
-        .skip(1 + latestArticles.length)
-        .toList();
-    final bool useTwoColumns = contentWidth > 840;
-    final double cardWidth = useTwoColumns
-        ? (contentWidth - 16) / 2
-        : contentWidth;
-    final bool isUsingFallbackData =
-        widget.repository is FallbackAwareRepository &&
-        (widget.repository as FallbackAwareRepository)
-            .isUsingFallbackData
-            .value;
+    final Article leadStory = articles.first;
+    final List<Article> remainingStories = articles.skip(1).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const _TabHeader(
-          title: 'Latest NBA News',
-          subtitle:
-              'Featured stories, fresh headlines, and a multi-source feed built for quick scanning.',
+        const _NewsHeader(),
+        const SizedBox(height: 18),
+        _NewsToolbar(
+          layoutMode: _layoutMode,
+          onModeChanged: _setLayoutMode,
+          isUsingFallbackData: isUsingFallbackData,
         ),
         const SizedBox(height: 18),
         if (isUsingFallbackData) ...<Widget>[
           const _FallbackBanner(
             message:
-                'Showing bundled demo headlines because live NBA news is unavailable right now.',
+                'Showing bundled demo headlines because the live feeds are unavailable right now.',
           ),
           const SizedBox(height: 18),
         ],
-        _FeaturedArticleCard(
-          article: featuredArticle,
-          onOpen: () => _openArticle(context, featuredArticle),
-          onShare: () => _shareArticle(featuredArticle),
-          onCopy: () => _copyLink(context, featuredArticle),
+        _LeadStoryCard(
+          article: leadStory,
+          onTap: () => _openArticle(leadStory),
         ),
-        if (latestArticles.isNotEmpty) ...<Widget>[
-          const SizedBox(height: 24),
-          _SectionTitle(
-            title: 'Latest',
-            subtitle: 'Quick-hitter headlines from the same live feed.',
+        if (remainingStories.isNotEmpty) ...<Widget>[
+          const SizedBox(height: 22),
+          Text(
+            'Latest Coverage',
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(color: AppTheme.ink),
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 200,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: latestArticles.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 12),
-              itemBuilder: (BuildContext context, int index) {
-                final Article article = latestArticles[index];
-                return SizedBox(
-                  width: 280,
-                  child: _HeadlineStripCard(
-                    article: article,
-                    onTap: () => _openArticle(context, article),
-                  ),
-                );
-              },
-            ),
+          const SizedBox(height: 4),
+          Text(
+            'A multi-source wire built for quick scanning and deeper in-app reading.',
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
-        ],
-        if (remainingArticles.isNotEmpty) ...<Widget>[
-          const SizedBox(height: 24),
-          _SectionTitle(
-            title: 'More Stories',
-            subtitle: 'Everyday coverage, analysis, and injury updates.',
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 16,
-            runSpacing: 16,
-            children: remainingArticles
-                .map(
-                  (Article article) => SizedBox(
-                    width: useTwoColumns ? cardWidth : double.infinity,
-                    child: _ArticleCard(
-                      article: article,
-                      onOpen: () => _openArticle(context, article),
-                      onShare: () => _shareArticle(article),
-                      onCopy: () => _copyLink(context, article),
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
+          const SizedBox(height: 14),
+          _buildStoryCollection(context, remainingStories),
         ],
       ],
     );
   }
 
-  Future<void> _openArticle(BuildContext context, Article article) async {
-    final Uri? articleUri = Uri.tryParse(article.url);
-    if (articleUri == null) {
-      return;
-    }
+  Widget _buildStoryCollection(BuildContext context, List<Article> articles) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final bool canUseTwoColumns = constraints.maxWidth >= 900;
+        final int crossAxisCount = _layoutMode == _NewsLayoutMode.grid
+            ? (canUseTwoColumns ? 2 : 1)
+            : 1;
 
-    if (!await launchUrl(articleUri, mode: LaunchMode.externalApplication) &&
-        context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open the article link.')),
-      );
-    }
-  }
+        if (_layoutMode == _NewsLayoutMode.list) {
+          return Column(
+            key: const Key('news-list'),
+            children: articles
+                .map(
+                  (Article article) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _StoryCard(
+                      article: article,
+                      onTap: () => _openArticle(article),
+                      layoutMode: _StoryCardLayout.list,
+                    ),
+                  ),
+                )
+                .toList(),
+          );
+        }
 
-  void _shareArticle(Article article) {
-    SharePlus.instance.share(
-      ShareParams(text: '${article.title}\n${article.url}'),
+        final double aspectRatio = constraints.maxWidth > 1040 ? 0.88 : 0.83;
+
+        return GridView.builder(
+          key: const Key('news-grid'),
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: articles.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: aspectRatio,
+          ),
+          itemBuilder: (BuildContext context, int index) {
+            final Article article = articles[index];
+            return _StoryCard(
+              article: article,
+              onTap: () => _openArticle(article),
+              layoutMode: _StoryCardLayout.compact,
+            );
+          },
+        );
+      },
     );
   }
 
-  Future<void> _copyLink(BuildContext context, Article article) async {
-    await FlutterClipboard.copy(article.url);
-    if (!context.mounted) {
+  void _setLayoutMode(_NewsLayoutMode layoutMode) {
+    if (_layoutMode == layoutMode) {
       return;
     }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Article link copied')));
+    setState(() {
+      _layoutMode = layoutMode;
+    });
+  }
+
+  Future<void> _openArticle(Article article) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) =>
+            widget.readerPageBuilder?.call(context, article) ??
+            ArticleReaderPage(article: article),
+      ),
+    );
+  }
+}
+
+class _NewsHeader extends StatelessWidget {
+  const _NewsHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: AppTheme.newsprint,
+      child: Padding(
+        padding: const EdgeInsets.all(22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'The Daily Wire',
+              style: GoogleFonts.newsreader(
+                fontSize: 42,
+                height: 1,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.ink,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'An editorial-style NBA briefing with live headlines, clean reading cards, and in-app article viewing.',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: AppTheme.ink),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NewsToolbar extends StatelessWidget {
+  const _NewsToolbar({
+    required this.layoutMode,
+    required this.onModeChanged,
+    required this.isUsingFallbackData,
+  });
+
+  final _NewsLayoutMode layoutMode;
+  final ValueChanged<_NewsLayoutMode> onModeChanged;
+  final bool isUsingFallbackData;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: <Widget>[
+        SegmentedButton<_NewsLayoutMode>(
+          segments: const <ButtonSegment<_NewsLayoutMode>>[
+            ButtonSegment<_NewsLayoutMode>(
+              value: _NewsLayoutMode.list,
+              icon: Icon(Icons.view_agenda_outlined),
+              label: Text('List'),
+            ),
+            ButtonSegment<_NewsLayoutMode>(
+              value: _NewsLayoutMode.grid,
+              icon: Icon(Icons.grid_view_rounded),
+              label: Text('Grid'),
+            ),
+          ],
+          selected: <_NewsLayoutMode>{layoutMode},
+          onSelectionChanged: (Set<_NewsLayoutMode> selection) {
+            onModeChanged(selection.first);
+          },
+        ),
+        Chip(
+          avatar: const Icon(Icons.hub_outlined, size: 18),
+          label: Text(isUsingFallbackData ? 'Demo feed' : 'NewsAPI + GNews'),
+        ),
+      ],
+    );
   }
 }
 
@@ -277,61 +381,23 @@ class _FallbackBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppTheme.nbaBlue.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.nbaBlue.withValues(alpha: 0.22)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Icon(Icons.wifi_off_rounded, color: AppTheme.nbaBlue),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(message, style: Theme.of(context).textTheme.bodyMedium),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TabHeader extends StatelessWidget {
-  const _TabHeader({required this.title, required this.subtitle});
-
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: <Color>[AppTheme.courtBlue, AppTheme.nbaBlue],
-        ),
-        borderRadius: BorderRadius.circular(30),
+        color: AppTheme.nbaBlue.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppTheme.nbaBlue.withValues(alpha: 0.18)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(22),
-        child: Column(
+        padding: const EdgeInsets.all(16),
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
-              title,
-              style: Theme.of(
-                context,
-              ).textTheme.displaySmall?.copyWith(color: Colors.white),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              subtitle,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Colors.white.withValues(alpha: 0.88),
+            Icon(Icons.wifi_off_rounded, color: AppTheme.nbaBlue),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
           ],
@@ -341,87 +407,8 @@ class _TabHeader extends StatelessWidget {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title, required this.subtitle});
-
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(title, style: Theme.of(context).textTheme.headlineMedium),
-        Text(subtitle, style: Theme.of(context).textTheme.bodyMedium),
-      ],
-    );
-  }
-}
-
-class _FeaturedArticleCard extends StatelessWidget {
-  const _FeaturedArticleCard({
-    required this.article,
-    required this.onOpen,
-    required this.onShare,
-    required this.onCopy,
-  });
-
-  final Article article;
-  final VoidCallback onOpen;
-  final VoidCallback onShare;
-  final VoidCallback onCopy;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onOpen,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            SizedBox(
-              height: 280,
-              width: double.infinity,
-              child: _ArticleImage(imageUrl: article.urlToImage),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  _MetaRow(article: article, isFeatured: true),
-                  const SizedBox(height: 10),
-                  Text(
-                    article.title,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.displaySmall?.copyWith(fontSize: 40),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    article.description,
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  const SizedBox(height: 16),
-                  _ActionRow(onOpen: onOpen, onShare: onShare, onCopy: onCopy),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _HeadlineStripCard extends StatelessWidget {
-  const _HeadlineStripCard({required this.article, required this.onTap});
+class _LeadStoryCard extends StatelessWidget {
+  const _LeadStoryCard({required this.article, required this.onTap});
 
   final Article article;
   final VoidCallback onTap;
@@ -429,105 +416,53 @@ class _HeadlineStripCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      clipBehavior: Clip.antiAlias,
+      key: ValueKey<String>('news-card-${article.dedupeKey}'),
+      color: Colors.white,
       child: InkWell(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: AppTheme.accentRed,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  article.source.toUpperCase(),
-                  style: GoogleFonts.oswald(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: Align(
-                  alignment: Alignment.bottomLeft,
-                  child: Text(
-                    article.title,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                article.captionText(),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ArticleCard extends StatelessWidget {
-  const _ArticleCard({
-    required this.article,
-    required this.onOpen,
-    required this.onShare,
-    required this.onCopy,
-  });
-
-  final Article article;
-  final VoidCallback onOpen;
-  final VoidCallback onShare;
-  final VoidCallback onCopy;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onOpen,
+        borderRadius: BorderRadius.circular(28),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            SizedBox(
-              height: 210,
-              width: double.infinity,
-              child: _ArticleImage(imageUrl: article.urlToImage),
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: _StoryImage(imageUrl: article.urlToImage),
+              ),
             ),
             Padding(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.all(22),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   _MetaRow(article: article),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 14),
                   Text(
                     article.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    article.description,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: GoogleFonts.newsreader(
+                      fontSize: 34,
+                      height: 1.05,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.ink,
+                    ),
                   ),
-                  const SizedBox(height: 14),
-                  _ActionRow(onOpen: onOpen, onShare: onShare, onCopy: onCopy),
+                  if (article.description.trim().isNotEmpty) ...<Widget>[
+                    const SizedBox(height: 12),
+                    Text(
+                      article.description,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: AppTheme.ink.withValues(alpha: 0.82),
+                        height: 1.6,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -538,8 +473,151 @@ class _ArticleCard extends StatelessWidget {
   }
 }
 
-class _ArticleImage extends StatelessWidget {
-  const _ArticleImage({required this.imageUrl});
+enum _StoryCardLayout { list, compact }
+
+class _StoryCard extends StatelessWidget {
+  const _StoryCard({
+    required this.article,
+    required this.onTap,
+    required this.layoutMode,
+  });
+
+  final Article article;
+  final VoidCallback onTap;
+  final _StoryCardLayout layoutMode;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      key: ValueKey<String>('news-card-${article.dedupeKey}'),
+      color: Colors.white,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(28),
+        child: layoutMode == _StoryCardLayout.list
+            ? _ListStoryCardBody(article: article)
+            : _CompactStoryCardBody(article: article),
+      ),
+    );
+  }
+}
+
+class _ListStoryCardBody extends StatelessWidget {
+  const _ListStoryCardBody({required this.article});
+
+  final Article article;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          child: AspectRatio(
+            aspectRatio: 16 / 9,
+            child: _StoryImage(imageUrl: article.urlToImage),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              _MetaRow(article: article),
+              const SizedBox(height: 10),
+              Text(
+                article.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.newsreader(
+                  fontSize: 28,
+                  height: 1.08,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.ink,
+                ),
+              ),
+              if (article.description.trim().isNotEmpty) ...<Widget>[
+                const SizedBox(height: 10),
+                Text(
+                  article.description,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppTheme.ink.withValues(alpha: 0.76),
+                    height: 1.55,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CompactStoryCardBody extends StatelessWidget {
+  const _CompactStoryCardBody({required this.article});
+
+  final Article article;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          child: AspectRatio(
+            aspectRatio: 4 / 3,
+            child: _StoryImage(imageUrl: article.urlToImage),
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                _MetaRow(article: article),
+                const SizedBox(height: 10),
+                Text(
+                  article.title,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.newsreader(
+                    fontSize: 24,
+                    height: 1.12,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.ink,
+                  ),
+                ),
+                if (article.description.trim().isNotEmpty) ...<Widget>[
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: Text(
+                      article.description,
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.ink.withValues(alpha: 0.76),
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StoryImage extends StatelessWidget {
+  const _StoryImage({required this.imageUrl});
 
   final String? imageUrl;
 
@@ -547,19 +625,21 @@ class _ArticleImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final String image = imageUrl ?? '';
     if (image.isEmpty) {
-      return _FallbackArticleImage();
+      return const _StoryImageFallback();
     }
 
     return FadeInImage.memoryNetwork(
       placeholder: kTransparentImage,
       image: image,
       fit: BoxFit.cover,
-      imageErrorBuilder: (_, _, _) => _FallbackArticleImage(),
+      imageErrorBuilder: (_, _, _) => const _StoryImageFallback(),
     );
   }
 }
 
-class _FallbackArticleImage extends StatelessWidget {
+class _StoryImageFallback extends StatelessWidget {
+  const _StoryImageFallback();
+
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
@@ -573,7 +653,7 @@ class _FallbackArticleImage extends StatelessWidget {
       child: Center(
         child: Icon(
           Icons.newspaper_rounded,
-          size: 64,
+          size: 60,
           color: Colors.white.withValues(alpha: 0.9),
         ),
       ),
@@ -582,36 +662,32 @@ class _FallbackArticleImage extends StatelessWidget {
 }
 
 class _MetaRow extends StatelessWidget {
-  const _MetaRow({required this.article, this.isFeatured = false});
+  const _MetaRow({required this.article});
 
   final Article article;
-  final bool isFeatured;
 
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: 12,
-      runSpacing: 8,
+      spacing: 10,
+      runSpacing: 10,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: <Widget>[
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
           decoration: BoxDecoration(
-            color: AppTheme.accentRed.withValues(alpha: 0.12),
+            color: AppTheme.accentRed.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(
             article.source.toUpperCase(),
-            style: GoogleFonts.oswald(
-              color: AppTheme.accentRed,
-              fontWeight: FontWeight.w700,
-              fontSize: isFeatured ? 15 : 13,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelLarge?.copyWith(color: AppTheme.accentRed),
           ),
         ),
         Text(
-          DateFormat(
-            'EEE, MMM d • h:mm a',
-          ).format(article.publishedAt.toLocal()),
+          DateFormat('MMM d • h:mm a').format(article.publishedAt.toLocal()),
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ],
@@ -619,78 +695,62 @@ class _MetaRow extends StatelessWidget {
   }
 }
 
-class _ActionRow extends StatelessWidget {
-  const _ActionRow({
-    required this.onOpen,
-    required this.onShare,
-    required this.onCopy,
-  });
-
-  final VoidCallback onOpen;
-  final VoidCallback onShare;
-  final VoidCallback onCopy;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 8,
-      children: <Widget>[
-        FilledButton.icon(
-          onPressed: onOpen,
-          icon: const Icon(Icons.open_in_new_rounded),
-          label: const Text('Open'),
-        ),
-        TextButton.icon(
-          onPressed: onShare,
-          icon: const Icon(Icons.send_rounded),
-          label: const Text('Share'),
-        ),
-        TextButton.icon(
-          onPressed: onCopy,
-          icon: const Icon(Icons.copy_rounded),
-          label: const Text('Copy Link'),
-        ),
-      ],
-    );
-  }
-}
-
-class _FeedbackCard extends StatelessWidget {
-  const _FeedbackCard({
+class _NewsStateCard extends StatelessWidget {
+  const _NewsStateCard({
     required this.icon,
     required this.title,
     required this.message,
-    required this.actionLabel,
-    required this.onAction,
+    this.actionLabel,
+    this.onAction,
+    this.showProgress = false,
   });
 
   final IconData icon;
   final String title;
   final String message;
-  final String actionLabel;
-  final Future<void> Function() onAction;
+  final String? actionLabel;
+  final Future<void> Function()? onAction;
+  final bool showProgress;
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Icon(icon, color: AppTheme.accentRed, size: 32),
-            const SizedBox(height: 12),
-            Text(title, style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 8),
-            Text(message, style: Theme.of(context).textTheme.bodyLarge),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                onAction();
-              },
-              child: Text(actionLabel),
+            Icon(icon, size: 36, color: AppTheme.accentRed),
+            const SizedBox(height: 14),
+            Text(
+              title,
+              style: GoogleFonts.newsreader(
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.ink,
+              ),
             ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: AppTheme.ink.withValues(alpha: 0.82),
+              ),
+            ),
+            if (showProgress) ...<Widget>[
+              const SizedBox(height: 18),
+              const CircularProgressIndicator(),
+            ],
+            if (actionLabel != null && onAction != null) ...<Widget>[
+              const SizedBox(height: 18),
+              FilledButton(
+                onPressed: () {
+                  onAction?.call();
+                },
+                child: Text(actionLabel!),
+              ),
+            ],
           ],
         ),
       ),

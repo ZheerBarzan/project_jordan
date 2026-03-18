@@ -19,6 +19,8 @@ void main() {
               {
                 "title": "Headline",
                 "description": "Story summary",
+                "author": "Reporter One",
+                "content": "Fuller story content",
                 "url": "https://example.com/story",
                 "publishedAt": "2026-03-17T10:00:00Z",
                 "source": {"name": "ESPN"},
@@ -35,6 +37,8 @@ void main() {
     expect(articles, hasLength(1));
     expect(articles.first.title, 'Headline');
     expect(articles.first.source, 'ESPN');
+    expect(articles.first.author, 'Reporter One');
+    expect(articles.first.content, 'Fuller story content');
   });
 
   test('NewsApi.fetchArticles throws on a bad response', () async {

@@ -7,6 +7,8 @@ class Article {
   final DateTime publishedAt;
   final String source;
   final String? urlToImage;
+  final String? author;
+  final String? content;
 
   const Article({
     required this.title,
@@ -15,6 +17,8 @@ class Article {
     required this.publishedAt,
     required this.source,
     required this.urlToImage,
+    this.author,
+    this.content,
   });
 
   String captionText() {
@@ -46,6 +50,8 @@ class Article {
       publishedAt: DateTime.tryParse(json['publishedAt']) ?? DateTime.now(),
       source: (json['source']?['name'] ?? "").toString(),
       urlToImage: json['urlToImage'],
+      author: json['author']?.toString(),
+      content: json['content']?.toString(),
     );
   }
 
@@ -59,6 +65,8 @@ class Article {
           DateTime.now(),
       source: (json['source']?['name'] ?? "").toString(),
       urlToImage: json['image']?.toString(),
+      author: json['source']?['name']?.toString(),
+      content: json['content']?.toString(),
     );
   }
 }

@@ -7,6 +7,9 @@ class AppTheme {
   static const Color accentRed = Color(0xFFD62828);
   static const Color softBackground = Color(0xFFF3F6FB);
   static const Color cardBackground = Color(0xFFFFFFFF);
+  static const Color newsprint = Color(0xFFF7F2E8);
+  static const Color paperLine = Color(0xFFE4DAC7);
+  static const Color ink = Color(0xFF1E1C1A);
 
   static ThemeData light() {
     final ColorScheme colorScheme = const ColorScheme.light(
@@ -37,7 +40,7 @@ class AppTheme {
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.35)),
+          side: const BorderSide(color: paperLine),
         ),
       ),
       chipTheme: ChipThemeData(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
+import 'package:project_jordan/components/scroll_chrome.dart';
 import 'package:project_jordan/model/player_leader.dart';
 import 'package:project_jordan/model/stats_dashboard.dart';
 import 'package:project_jordan/model/team_season_stats.dart';
@@ -10,10 +12,14 @@ import 'package:project_jordan/theme/app_theme.dart';
 enum _StatsSection { teams, players }
 
 class StatsPage extends StatefulWidget {
-  StatsPage({super.key, BasketballDataRepository? repository})
-    : repository = repository ?? BasketballRepository();
+  StatsPage({
+    super.key,
+    BasketballDataRepository? repository,
+    this.onChromeVisibilityChanged,
+  }) : repository = repository ?? BasketballRepository();
 
   final BasketballDataRepository repository;
+  final ChromeVisibilityChanged? onChromeVisibilityChanged;
 
   @override
   State<StatsPage> createState() => _StatsPageState();
@@ -42,41 +48,61 @@ class _StatsPageState extends State<StatsPage> {
     return FutureBuilder<StatsDashboard>(
       future: _futureDashboard,
       builder: (BuildContext context, AsyncSnapshot<StatsDashboard> snapshot) {
-        return RefreshIndicator(
-          color: AppTheme.accentRed,
-          onRefresh: _reload,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
-            children: <Widget>[
-              Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1120),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      _StatsHeader(season: _season),
-                      const SizedBox(height: 18),
-                      _StatsToolbar(
-                        currentSection: _section,
-                        season: _season,
-                        onSectionChanged: (_StatsSection section) {
-                          setState(() {
-                            _section = section;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 18),
-                      _buildBody(context, snapshot),
-                    ],
+        return NotificationListener<UserScrollNotification>(
+          onNotification: _handleScrollNotification,
+          child: RefreshIndicator(
+            color: AppTheme.accentRed,
+            onRefresh: _reload,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
+              children: <Widget>[
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1120),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        _StatsHeader(season: _season),
+                        const SizedBox(height: 18),
+                        _StatsToolbar(
+                          currentSection: _section,
+                          season: _season,
+                          onSectionChanged: (_StatsSection section) {
+                            setState(() {
+                              _section = section;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 18),
+                        _buildBody(context, snapshot),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
     );
+  }
+
+  bool _handleScrollNotification(UserScrollNotification notification) {
+    final ChromeVisibilityChanged? callback = widget.onChromeVisibilityChanged;
+    if (callback == null || notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
+
+    if (notification.metrics.pixels <= 24) {
+      callback(true);
+    } else if (notification.direction == ScrollDirection.reverse) {
+      callback(false);
+    } else if (notification.direction == ScrollDirection.forward) {
+      callback(true);
+    }
+
+    return false;
   }
 
   Widget _buildBody(

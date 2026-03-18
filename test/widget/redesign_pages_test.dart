@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:project_jordan/UI/article_reader_page.dart';
+import 'package:project_jordan/UI/home_page.dart';
 import 'package:project_jordan/UI/news_page.dart';
 import 'package:project_jordan/UI/score_page.dart';
 import 'package:project_jordan/UI/stats_page.dart';
+import 'package:project_jordan/components/scroll_chrome.dart';
 import 'package:project_jordan/model/game_model.dart';
 import 'package:project_jordan/model/news_model.dart';
 import 'package:project_jordan/model/player.dart';
@@ -29,27 +32,12 @@ void main() {
         throw Exception('Primary news feed offline');
       }
 
-      return <Article>[
-        Article(
-          title: 'Featured headline',
-          description: 'Lead story summary',
-          url: 'https://example.com/featured',
-          publishedAt: DateTime.parse('2026-03-17T12:00:00Z'),
-          source: 'ESPN',
-          urlToImage: null,
-        ),
-        Article(
-          title: 'Bench unit update',
-          description: 'Secondary summary',
-          url: 'https://example.com/secondary',
-          publishedAt: DateTime.parse('2026-03-17T10:00:00Z'),
-          source: 'The Athletic',
-          urlToImage: null,
-        ),
-      ];
+      return _sampleArticles();
     });
 
-    await tester.pumpWidget(_TestApp(child: NewsPage(repository: repository)));
+    await tester.pumpWidget(
+      _TestApp(home: NewsPage(repository: repository), wrapInScaffold: true),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('News feed unavailable'), findsOneWidget);
@@ -57,8 +45,121 @@ void main() {
     await tester.tap(find.text('Retry'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Featured headline'), findsOneWidget);
+    expect(find.text('Top headline'), findsOneWidget);
     expect(find.text('Bench unit update'), findsOneWidget);
+    expect(find.text('Latest Coverage'), findsOneWidget);
+  });
+
+  testWidgets(
+    'NewsPage switches layouts, removes card buttons, and opens reader',
+    (WidgetTester tester) async {
+      final _FakeNewsRepository repository = _FakeNewsRepository(
+        () async => _sampleArticles(),
+      );
+
+      await tester.pumpWidget(
+        _TestApp(
+          home: NewsPage(
+            repository: repository,
+            readerPageBuilder: (BuildContext context, Article article) {
+              return Scaffold(
+                body: Center(child: Text('Reader: ${article.title}')),
+              );
+            },
+          ),
+          wrapInScaffold: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('news-list')), findsOneWidget);
+      expect(find.text('Open'), findsNothing);
+      expect(find.text('Share'), findsNothing);
+      expect(find.text('Copy Link'), findsNothing);
+
+      await tester.tap(find.text('Grid'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('news-grid')), findsOneWidget);
+
+      final Finder leadStoryFinder = find.byKey(
+        ValueKey<String>('news-card-${_sampleArticles().first.dedupeKey}'),
+      );
+      await tester.ensureVisible(leadStoryFinder);
+      await tester.tap(leadStoryFinder, warnIfMissed: false);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Reader: Top headline'), findsOneWidget);
+    },
+  );
+
+  testWidgets('ArticleReaderPage shows retry and browser fallback on error', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      _TestApp(
+        home: ArticleReaderPage(
+          article: _sampleArticles().first,
+          initialReaderError: Exception('Embedded reader failed'),
+        ),
+      ),
+    );
+
+    expect(
+      find.byKey(const Key('article-reader-inline-message')),
+      findsOneWidget,
+    );
+    expect(find.text('Could not load the article'), findsOneWidget);
+    expect(find.text('Retry'), findsOneWidget);
+    expect(find.text('Open in Browser'), findsOneWidget);
+  });
+
+  testWidgets('HomePage top chrome hides on scroll down and returns on up', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      _TestApp(
+        home: HomePage(
+          pagesBuilder: (ChromeVisibilityChanged onChromeVisibilityChanged) =>
+              <Widget>[
+                _ChromeTestPage(
+                  onChromeVisibilityChanged: onChromeVisibilityChanged,
+                ),
+                const SizedBox.shrink(),
+                const SizedBox.shrink(),
+                const SizedBox.shrink(),
+              ],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getSize(find.byKey(const Key('home-top-chrome-shell'))).height,
+      greaterThan(0),
+    );
+
+    await tester.drag(
+      find.byKey(const Key('chrome-test-list')),
+      const Offset(0, -500),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getSize(find.byKey(const Key('home-top-chrome-shell'))).height,
+      0,
+    );
+
+    await tester.drag(
+      find.byKey(const Key('chrome-test-list')),
+      const Offset(0, 300),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getSize(find.byKey(const Key('home-top-chrome-shell'))).height,
+      greaterThan(0),
+    );
   });
 
   testWidgets('ScorePage switches between today and recent windows', (
@@ -83,7 +184,9 @@ void main() {
       dashboard: _dashboard(),
     );
 
-    await tester.pumpWidget(_TestApp(child: ScorePage(repository: repository)));
+    await tester.pumpWidget(
+      _TestApp(home: ScorePage(repository: repository), wrapInScaffold: true),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Los Angeles Lakers'), findsOneWidget);
@@ -104,7 +207,9 @@ void main() {
       dashboard: _dashboard(),
     );
 
-    await tester.pumpWidget(_TestApp(child: StatsPage(repository: repository)));
+    await tester.pumpWidget(
+      _TestApp(home: StatsPage(repository: repository), wrapInScaffold: true),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Eastern Conference'), findsOneWidget);
@@ -132,7 +237,9 @@ void main() {
       ),
     );
 
-    await tester.pumpWidget(_TestApp(child: NewsPage(repository: repository)));
+    await tester.pumpWidget(
+      _TestApp(home: NewsPage(repository: repository), wrapInScaffold: true),
+    );
     await tester.pumpAndSettle();
 
     expect(
@@ -153,7 +260,9 @@ void main() {
       ),
     );
 
-    await tester.pumpWidget(_TestApp(child: ScorePage(repository: repository)));
+    await tester.pumpWidget(
+      _TestApp(home: ScorePage(repository: repository), wrapInScaffold: true),
+    );
     await tester.pumpAndSettle();
 
     expect(
@@ -166,15 +275,16 @@ void main() {
 }
 
 class _TestApp extends StatelessWidget {
-  const _TestApp({required this.child});
+  const _TestApp({required this.home, this.wrapInScaffold = false});
 
-  final Widget child;
+  final Widget home;
+  final bool wrapInScaffold;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: AppTheme.light(),
-      home: Scaffold(body: child),
+      home: wrapInScaffold ? Scaffold(body: home) : home,
     );
   }
 }
@@ -221,6 +331,103 @@ class _FakeBasketballRepository implements BasketballDataRepository {
   @override
   Future<StatsDashboard> fetchStatsDashboard({required int season}) async =>
       dashboard;
+}
+
+class _ChromeTestPage extends StatelessWidget {
+  const _ChromeTestPage({required this.onChromeVisibilityChanged});
+
+  final ChromeVisibilityChanged onChromeVisibilityChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return _ChromeTestScrollView(
+      onChromeVisibilityChanged: onChromeVisibilityChanged,
+    );
+  }
+}
+
+class _ChromeTestScrollView extends StatefulWidget {
+  const _ChromeTestScrollView({required this.onChromeVisibilityChanged});
+
+  final ChromeVisibilityChanged onChromeVisibilityChanged;
+
+  @override
+  State<_ChromeTestScrollView> createState() => _ChromeTestScrollViewState();
+}
+
+class _ChromeTestScrollViewState extends State<_ChromeTestScrollView> {
+  late final ScrollController _controller;
+  double _lastOffset = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = ScrollController()..addListener(_handleScroll);
+  }
+
+  @override
+  void dispose() {
+    _controller
+      ..removeListener(_handleScroll)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _handleScroll() {
+    final double offset = _controller.offset;
+    if (offset <= 24) {
+      widget.onChromeVisibilityChanged(true);
+    } else if (offset > _lastOffset) {
+      widget.onChromeVisibilityChanged(false);
+    } else if (offset < _lastOffset) {
+      widget.onChromeVisibilityChanged(true);
+    }
+    _lastOffset = offset;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      key: const Key('chrome-test-list'),
+      controller: _controller,
+      physics: const AlwaysScrollableScrollPhysics(),
+      itemCount: 40,
+      itemBuilder: (BuildContext context, int index) {
+        return ListTile(title: Text('Story $index'));
+      },
+    );
+  }
+}
+
+List<Article> _sampleArticles() {
+  return <Article>[
+    Article(
+      title: 'Top headline',
+      description: 'Lead story summary',
+      url: 'https://example.com/featured',
+      publishedAt: DateTime.parse('2026-03-17T12:00:00Z'),
+      source: 'ESPN',
+      urlToImage: null,
+      author: 'Reporter One',
+      content: 'Lead story content',
+    ),
+    Article(
+      title: 'Bench unit update',
+      description: 'Secondary summary',
+      url: 'https://example.com/secondary',
+      publishedAt: DateTime.parse('2026-03-17T10:00:00Z'),
+      source: 'The Athletic',
+      urlToImage: null,
+    ),
+    Article(
+      title: 'Trade market watch',
+      description: 'Third story summary',
+      url: 'https://example.com/trade',
+      publishedAt: DateTime.parse('2026-03-17T09:00:00Z'),
+      source: 'Yahoo Sports',
+      urlToImage: null,
+    ),
+  ];
 }
 
 Game _game({
