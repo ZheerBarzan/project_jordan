@@ -1,0 +1,6 @@
+{
+  "BALLDONTLIE_API_KEY": "replace-with-your-api-key",
+  "NEWSAPI_API_KEY": "replace-with-your-newsapi-key",
+  "GNEWS_API_KEY": "replace-with-your-gnews-key",
+  "GOOGLE_SIGN_IN_SERVER_CLIENT_ID": "replace-if-needed"
+}

@@ -27,7 +27,9 @@ class TeamStanding {
 
   factory TeamStanding.fromJson(Map<String, dynamic> json) {
     return TeamStanding(
-      team: Team.fromJson(json['team'] as Map<String, dynamic>? ?? <String, dynamic>{}),
+      team: Team.fromJson(
+        json['team'] as Map<String, dynamic>? ?? <String, dynamic>{},
+      ),
       conferenceRecord: (json['conference_record'] ?? '').toString(),
       conferenceRank: json['conference_rank'] as int? ?? 0,
       divisionRecord: (json['division_record'] ?? '').toString(),

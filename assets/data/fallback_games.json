@@ -1,0 +1,126 @@
+[
+  {
+    "id": 101,
+    "date": "2026-03-18T00:30:00Z",
+    "home_team_score": 118,
+    "visitor_team_score": 112,
+    "season": 2025,
+    "period": 4,
+    "status": "Final",
+    "time": "7:30 PM ET",
+    "postseason": false,
+    "postponed": false,
+    "fallback_day_offset": 0,
+    "home_team": {
+      "id": 14,
+      "abbreviation": "LAL",
+      "city": "Los Angeles",
+      "conference": "West",
+      "division": "Pacific",
+      "full_name": "Los Angeles Lakers",
+      "name": "Lakers"
+    },
+    "visitor_team": {
+      "id": 2,
+      "abbreviation": "BOS",
+      "city": "Boston",
+      "conference": "East",
+      "division": "Atlantic",
+      "full_name": "Boston Celtics",
+      "name": "Celtics"
+    }
+  },
+  {
+    "id": 102,
+    "date": "2026-03-18T02:00:00Z",
+    "home_team_score": 99,
+    "visitor_team_score": 104,
+    "season": 2025,
+    "period": 3,
+    "status": "3rd Qtr",
+    "time": "9:00 PM ET",
+    "postseason": false,
+    "postponed": false,
+    "fallback_day_offset": 0,
+    "home_team": {
+      "id": 10,
+      "abbreviation": "GSW",
+      "city": "Golden State",
+      "conference": "West",
+      "division": "Pacific",
+      "full_name": "Golden State Warriors",
+      "name": "Warriors"
+    },
+    "visitor_team": {
+      "id": 25,
+      "abbreviation": "OKC",
+      "city": "Oklahoma City",
+      "conference": "West",
+      "division": "Northwest",
+      "full_name": "Oklahoma City Thunder",
+      "name": "Thunder"
+    }
+  },
+  {
+    "id": 103,
+    "date": "2026-03-17T00:00:00Z",
+    "home_team_score": 121,
+    "visitor_team_score": 117,
+    "season": 2025,
+    "period": 4,
+    "status": "Final",
+    "time": "7:00 PM ET",
+    "postseason": false,
+    "postponed": false,
+    "fallback_day_offset": 1,
+    "home_team": {
+      "id": 5,
+      "abbreviation": "NYK",
+      "city": "New York",
+      "conference": "East",
+      "division": "Atlantic",
+      "full_name": "New York Knicks",
+      "name": "Knicks"
+    },
+    "visitor_team": {
+      "id": 15,
+      "abbreviation": "MIA",
+      "city": "Miami",
+      "conference": "East",
+      "division": "Southeast",
+      "full_name": "Miami Heat",
+      "name": "Heat"
+    }
+  },
+  {
+    "id": 104,
+    "date": "2026-03-16T01:30:00Z",
+    "home_team_score": 110,
+    "visitor_team_score": 108,
+    "season": 2025,
+    "period": 4,
+    "status": "Final",
+    "time": "8:30 PM ET",
+    "postseason": false,
+    "postponed": false,
+    "fallback_day_offset": 2,
+    "home_team": {
+      "id": 23,
+      "abbreviation": "PHX",
+      "city": "Phoenix",
+      "conference": "West",
+      "division": "Pacific",
+      "full_name": "Phoenix Suns",
+      "name": "Suns"
+    },
+    "visitor_team": {
+      "id": 27,
+      "abbreviation": "SAC",
+      "city": "Sacramento",
+      "conference": "West",
+      "division": "Pacific",
+      "full_name": "Sacramento Kings",
+      "name": "Kings"
+    }
+  }
+]

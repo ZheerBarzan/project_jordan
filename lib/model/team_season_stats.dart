@@ -41,7 +41,9 @@ class TeamSeasonStats {
     int readInt(String key) => (stats[key] as num?)?.toInt() ?? 0;
 
     return TeamSeasonStats(
-      team: Team.fromJson(json['team'] as Map<String, dynamic>? ?? <String, dynamic>{}),
+      team: Team.fromJson(
+        json['team'] as Map<String, dynamic>? ?? <String, dynamic>{},
+      ),
       season: json['season'] as int? ?? 0,
       seasonType: (json['season_type'] ?? '').toString(),
       wins: readInt('w'),

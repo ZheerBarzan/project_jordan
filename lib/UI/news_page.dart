@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:project_jordan/model/news_model.dart';
+import 'package:project_jordan/repositories/fallback_aware_repository.dart';
 import 'package:project_jordan/repositories/news_repository.dart';
 import 'package:project_jordan/theme/app_theme.dart';
 import 'package:share_plus/share_plus.dart';
@@ -11,7 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 class NewsPage extends StatefulWidget {
   NewsPage({super.key, NewsFeedRepository? repository})
-      : repository = repository ?? NewsRepository();
+    : repository = repository ?? NewsRepository();
 
   final NewsFeedRepository repository;
 
@@ -52,7 +53,11 @@ class _NewsPageState extends State<NewsPage> {
                   Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 1120),
-                      child: _buildBody(context, snapshot, constraints.maxWidth),
+                      child: _buildBody(
+                        context,
+                        snapshot,
+                        constraints.maxWidth,
+                      ),
                     ),
                   ),
                 ],
@@ -143,9 +148,18 @@ class _NewsPageState extends State<NewsPage> {
 
     final Article featuredArticle = articles.first;
     final List<Article> latestArticles = articles.skip(1).take(4).toList();
-    final List<Article> remainingArticles = articles.skip(1 + latestArticles.length).toList();
+    final List<Article> remainingArticles = articles
+        .skip(1 + latestArticles.length)
+        .toList();
     final bool useTwoColumns = contentWidth > 840;
-    final double cardWidth = useTwoColumns ? (contentWidth - 16) / 2 : contentWidth;
+    final double cardWidth = useTwoColumns
+        ? (contentWidth - 16) / 2
+        : contentWidth;
+    final bool isUsingFallbackData =
+        widget.repository is FallbackAwareRepository &&
+        (widget.repository as FallbackAwareRepository)
+            .isUsingFallbackData
+            .value;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,6 +170,13 @@ class _NewsPageState extends State<NewsPage> {
               'Featured stories, fresh headlines, and a multi-source feed built for quick scanning.',
         ),
         const SizedBox(height: 18),
+        if (isUsingFallbackData) ...<Widget>[
+          const _FallbackBanner(
+            message:
+                'Showing bundled demo headlines because live NBA news is unavailable right now.',
+          ),
+          const SizedBox(height: 18),
+        ],
         _FeaturedArticleCard(
           article: featuredArticle,
           onOpen: () => _openArticle(context, featuredArticle),
@@ -243,8 +264,37 @@ class _NewsPageState extends State<NewsPage> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Article link copied')),
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Article link copied')));
+  }
+}
+
+class _FallbackBanner extends StatelessWidget {
+  const _FallbackBanner({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.nbaBlue.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.nbaBlue.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Icon(Icons.wifi_off_rounded, color: AppTheme.nbaBlue),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(message, style: Theme.of(context).textTheme.bodyMedium),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -262,10 +312,7 @@ class _TabHeader extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: <Color>[
-            AppTheme.courtBlue,
-            AppTheme.nbaBlue,
-          ],
+          colors: <Color>[AppTheme.courtBlue, AppTheme.nbaBlue],
         ),
         borderRadius: BorderRadius.circular(30),
       ),
@@ -276,18 +323,16 @@ class _TabHeader extends StatelessWidget {
           children: <Widget>[
             Text(
               title,
-              style: Theme.of(context)
-                  .textTheme
-                  .displaySmall
-                  ?.copyWith(color: Colors.white),
+              style: Theme.of(
+                context,
+              ).textTheme.displaySmall?.copyWith(color: Colors.white),
             ),
             const SizedBox(height: 8),
             Text(
               subtitle,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
-                  ?.copyWith(color: Colors.white.withValues(alpha: 0.88)),
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Colors.white.withValues(alpha: 0.88),
+              ),
             ),
           ],
         ),
@@ -352,9 +397,9 @@ class _FeaturedArticleCard extends StatelessWidget {
                     article.title,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                          fontSize: 40,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.displaySmall?.copyWith(fontSize: 40),
                   ),
                   const SizedBox(height: 10),
                   Text(
@@ -364,11 +409,7 @@ class _FeaturedArticleCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   const SizedBox(height: 16),
-                  _ActionRow(
-                    onOpen: onOpen,
-                    onShare: onShare,
-                    onCopy: onCopy,
-                  ),
+                  _ActionRow(onOpen: onOpen, onShare: onShare, onCopy: onCopy),
                 ],
               ),
             ),
@@ -397,7 +438,10 @@ class _HeadlineStripCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.accentRed,
                   borderRadius: BorderRadius.circular(999),
@@ -483,11 +527,7 @@ class _ArticleCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 14),
-                  _ActionRow(
-                    onOpen: onOpen,
-                    onShare: onShare,
-                    onCopy: onCopy,
-                  ),
+                  _ActionRow(onOpen: onOpen, onShare: onShare, onCopy: onCopy),
                 ],
               ),
             ),
@@ -527,10 +567,7 @@ class _FallbackArticleImage extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: <Color>[
-            AppTheme.courtBlue,
-            AppTheme.nbaBlue,
-          ],
+          colors: <Color>[AppTheme.courtBlue, AppTheme.nbaBlue],
         ),
       ),
       child: Center(
@@ -572,7 +609,9 @@ class _MetaRow extends StatelessWidget {
           ),
         ),
         Text(
-          DateFormat('EEE, MMM d • h:mm a').format(article.publishedAt.toLocal()),
+          DateFormat(
+            'EEE, MMM d • h:mm a',
+          ).format(article.publishedAt.toLocal()),
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ],

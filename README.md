@@ -49,8 +49,20 @@ BALLDONTLIE now requires an API key. Provide it with:
 flutter run --dart-define=BALLDONTLIE_API_KEY=your_api_key
 ```
 
-Without this key, the app still launches, but the score and stats tabs show a
-clear configuration error instead of hanging.
+Without this key, the app still launches. The score tab falls back to bundled
+demo data and the stats tab shows a clear configuration warning instead of
+hanging.
+
+### Local VS Code setup
+
+For local runs from VS Code:
+
+1. Copy `.dart_define.local.example.json` to `.dart_define.local.json`
+2. Fill in the API key values you already have
+3. Launch the app from one of the committed `.vscode/launch.json` profiles
+
+The real `.dart_define.local.json` file is ignored by git and is passed to
+Flutter automatically through `--dart-define-from-file`.
 
 ### Required for the primary news feed
 
@@ -69,7 +81,8 @@ flutter run --dart-define=GNEWS_API_KEY=your_gnews_key
 ```
 
 If only one news provider key is configured, the app still works with that
-single provider.
+single provider. If both providers are unavailable, the app falls back to a
+bundled demo feed so the screen remains usable.
 
 ### Premium stats note
 
@@ -110,5 +123,7 @@ The repo includes:
   modernization while the page layouts were redesigned.
 - News no longer uses a bundled API key. Configure `NEWSAPI_API_KEY` and
   optionally `GNEWS_API_KEY` at runtime.
+- Scores and news fall back to bundled demo content when live APIs are not
+  reachable or local keys are missing.
 - Web uses Firebase Auth for Google popup sign-in so the existing custom button
   can remain in place.

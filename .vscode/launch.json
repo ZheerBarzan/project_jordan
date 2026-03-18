@@ -5,19 +5,28 @@
       "name": "Flutter Android",
       "request": "launch",
       "type": "dart",
-      "deviceId": "emulator-5554"
+      "deviceId": "emulator-5554",
+      "toolArgs": [
+        "--dart-define-from-file=.dart_define.local.json"
+      ]
     },
     {
       "name": "Flutter iOS",
       "request": "launch",
       "type": "dart",
-      "deviceId": "00008130-0006794034C3001C"
+      "deviceId": "00008130-0006794034C3001C",
+      "toolArgs": [
+        "--dart-define-from-file=.dart_define.local.json"
+      ]
     },
     {
       "name": "Flutter Web (Chrome)",
       "request": "launch",
       "type": "dart",
-      "deviceId": "chrome"
+      "deviceId": "chrome",
+      "toolArgs": [
+        "--dart-define-from-file=.dart_define.local.json"
+      ]
     },
     {
       "name": "Flutter Web (Chrome localhost)",
@@ -25,6 +34,7 @@
       "type": "dart",
       "deviceId": "chrome",
       "toolArgs": [
+        "--dart-define-from-file=.dart_define.local.json",
         "--web-hostname",
         "localhost",
         "--web-port",

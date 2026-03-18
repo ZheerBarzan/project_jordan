@@ -41,10 +41,7 @@ class _HomePageState extends State<HomePage> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: <Color>[
-                AppTheme.nbaBlue,
-                AppTheme.courtBlue,
-              ],
+              colors: <Color>[AppTheme.nbaBlue, AppTheme.courtBlue],
             ),
           ),
         ),
@@ -70,10 +67,7 @@ class _HomePageState extends State<HomePage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: <Color>[
-              AppTheme.courtBlue,
-              AppTheme.nbaBlue,
-            ],
+            colors: <Color>[AppTheme.courtBlue, AppTheme.nbaBlue],
           ),
         ),
         child: Padding(

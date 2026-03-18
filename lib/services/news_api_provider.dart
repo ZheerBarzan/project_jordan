@@ -6,11 +6,13 @@ import 'package:project_jordan/services/news_provider.dart';
 
 class NewsApiProvider implements NewsProvider {
   NewsApiProvider({http.Client? client, String? apiKey})
-      : _client = client ?? http.Client(),
-        _apiKey = apiKey ?? _defaultApiKey;
+    : _client = client ?? http.Client(),
+      _apiKey = apiKey ?? _defaultApiKey;
 
   static const String _authority = 'newsapi.org';
-  static const String _defaultApiKey = String.fromEnvironment('NEWSAPI_API_KEY');
+  static const String _defaultApiKey = String.fromEnvironment(
+    'NEWSAPI_API_KEY',
+  );
 
   final http.Client _client;
   final String _apiKey;
@@ -50,9 +52,13 @@ class NewsApiProvider implements NewsProvider {
       );
     }
 
-    final List<dynamic> articlesJson = json['articles'] as List<dynamic>? ?? <dynamic>[];
+    final List<dynamic> articlesJson =
+        json['articles'] as List<dynamic>? ?? <dynamic>[];
     return articlesJson
-        .map((dynamic article) => Article.fromJson(article as Map<String, dynamic>))
+        .map(
+          (dynamic article) =>
+              Article.fromJson(article as Map<String, dynamic>),
+        )
         .where((Article article) => article.hasEssentialContent)
         .toList();
   }

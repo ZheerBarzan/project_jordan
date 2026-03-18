@@ -44,10 +44,11 @@ class NbaApiService {
       if (startDate != null) 'start_date': _formatDate(startDate),
       if (endDate != null) 'end_date': _formatDate(endDate),
     };
-    final Map<String, List<String>> listQueryParameters = <String, List<String>>{
-      if (dates != null && dates.isNotEmpty)
-        'dates[]': dates.map(_formatDate).toList(),
-    };
+    final Map<String, List<String>> listQueryParameters =
+        <String, List<String>>{
+          if (dates != null && dates.isNotEmpty)
+            'dates[]': dates.map(_formatDate).toList(),
+        };
 
     final Map<String, dynamic> json = await _getJson(
       '/v1/games',
@@ -72,8 +73,7 @@ class NbaApiService {
 
     return standingsJson
         .map(
-          (dynamic item) =>
-              TeamStanding.fromJson(item as Map<String, dynamic>),
+          (dynamic item) => TeamStanding.fromJson(item as Map<String, dynamic>),
         )
         .toList();
   }
@@ -90,7 +90,8 @@ class NbaApiService {
         'per_page': '100',
       },
     );
-    final List<dynamic> statsJson = json['data'] as List<dynamic>? ?? <dynamic>[];
+    final List<dynamic> statsJson =
+        json['data'] as List<dynamic>? ?? <dynamic>[];
 
     return statsJson
         .map(
@@ -111,7 +112,8 @@ class NbaApiService {
         'stat_type': statType,
       },
     );
-    final List<dynamic> leadersJson = json['data'] as List<dynamic>? ?? <dynamic>[];
+    final List<dynamic> leadersJson =
+        json['data'] as List<dynamic>? ?? <dynamic>[];
 
     return leadersJson
         .map(
@@ -168,7 +170,8 @@ class NbaApiService {
       );
     }
 
-    for (final MapEntry<String, List<String>> entry in listQueryParameters.entries) {
+    for (final MapEntry<String, List<String>> entry
+        in listQueryParameters.entries) {
       for (final String value in entry.value) {
         queryParts.add(
           '${Uri.encodeQueryComponent(entry.key)}=${Uri.encodeQueryComponent(value)}',

@@ -4,13 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:project_jordan/model/game_model.dart';
 import 'package:project_jordan/repositories/basketball_repository.dart';
+import 'package:project_jordan/repositories/fallback_aware_repository.dart';
 import 'package:project_jordan/theme/app_theme.dart';
 
 enum _ScoreboardWindow { today, recent, custom }
 
 class ScorePage extends StatefulWidget {
   ScorePage({super.key, BasketballDataRepository? repository})
-      : repository = repository ?? BasketballRepository();
+    : repository = repository ?? BasketballRepository();
 
   final BasketballDataRepository repository;
 
@@ -110,10 +111,13 @@ class _ScorePageState extends State<ScorePage> {
     );
   }
 
-  Widget _buildBody(
-    BuildContext context,
-    AsyncSnapshot<List<Game>> snapshot,
-  ) {
+  Widget _buildBody(BuildContext context, AsyncSnapshot<List<Game>> snapshot) {
+    final bool isUsingFallbackData =
+        widget.repository is FallbackAwareRepository &&
+        (widget.repository as FallbackAwareRepository)
+            .isUsingFallbackData
+            .value;
+
     if (snapshot.connectionState == ConnectionState.waiting) {
       return const _CenteredState(
         icon: Icons.sports_basketball_outlined,
@@ -145,34 +149,48 @@ class _ScorePageState extends State<ScorePage> {
       );
     }
 
-    final LinkedHashMap<DateTime, List<Game>> groupedGames = _groupGamesByDate(games);
+    final LinkedHashMap<DateTime, List<Game>> groupedGames = _groupGamesByDate(
+      games,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: groupedGames.entries.map((MapEntry<DateTime, List<Game>> entry) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                DateFormat('EEEE, MMM d').format(entry.key),
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 10),
-              ...entry.value.map((Game game) => Padding(
+      children: <Widget>[
+        if (isUsingFallbackData) ...<Widget>[
+          const _FallbackBanner(
+            message:
+                'Showing bundled demo scoreboard data because live NBA scores are unavailable right now.',
+          ),
+          const SizedBox(height: 16),
+        ],
+        ...groupedGames.entries.map((MapEntry<DateTime, List<Game>> entry) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  DateFormat('EEEE, MMM d').format(entry.key),
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 10),
+                ...entry.value.map(
+                  (Game game) => Padding(
                     padding: const EdgeInsets.only(bottom: 14),
                     child: _GameCard(game: game),
-                  )),
-            ],
-          ),
-        );
-      }).toList(),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
     );
   }
 
   LinkedHashMap<DateTime, List<Game>> _groupGamesByDate(List<Game> games) {
-    final LinkedHashMap<DateTime, List<Game>> grouped = LinkedHashMap<DateTime, List<Game>>();
+    final LinkedHashMap<DateTime, List<Game>> grouped =
+        LinkedHashMap<DateTime, List<Game>>();
     for (final Game game in games) {
       final DateTime key = DateTime(
         game.parsedDate.year,
@@ -195,10 +213,7 @@ class _ScoreHeader extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: <Color>[
-            AppTheme.nbaBlue,
-            AppTheme.courtBlue,
-          ],
+          colors: <Color>[AppTheme.nbaBlue, AppTheme.courtBlue],
         ),
         borderRadius: BorderRadius.circular(30),
       ),
@@ -209,18 +224,16 @@ class _ScoreHeader extends StatelessWidget {
           children: <Widget>[
             Text(
               'League Scoreboard',
-              style: Theme.of(context)
-                  .textTheme
-                  .displaySmall
-                  ?.copyWith(color: Colors.white),
+              style: Theme.of(
+                context,
+              ).textTheme.displaySmall?.copyWith(color: Colors.white),
             ),
             const SizedBox(height: 8),
             Text(
               'Today, recent slates, and game-day status cards ordered for quick scanning.',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
-                  ?.copyWith(color: Colors.white.withValues(alpha: 0.88)),
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Colors.white.withValues(alpha: 0.88),
+              ),
             ),
           ],
         ),
@@ -323,10 +336,7 @@ class _GameCard extends StatelessWidget {
                     style: theme.textTheme.bodyMedium,
                   ),
                 ),
-                Text(
-                  'Season ${game.season}',
-                  style: theme.textTheme.bodySmall,
-                ),
+                Text('Season ${game.season}', style: theme.textTheme.bodySmall),
               ],
             ),
           ],
@@ -367,7 +377,8 @@ class _TeamScoreRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TextStyle? scoreStyle = Theme.of(context).textTheme.displaySmall?.copyWith(
+    final TextStyle? scoreStyle = Theme.of(context).textTheme.displaySmall
+        ?.copyWith(
           fontSize: 38,
           color: emphasize ? AppTheme.accentRed : AppTheme.nbaBlue,
         );
@@ -384,9 +395,9 @@ class _TeamScoreRow extends StatelessWidget {
           alignment: Alignment.center,
           child: Text(
             abbreviation,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: AppTheme.nbaBlue,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(color: AppTheme.nbaBlue),
           ),
         ),
         const SizedBox(width: 14),
@@ -395,10 +406,7 @@ class _TeamScoreRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(teamName, style: Theme.of(context).textTheme.titleLarge),
-              Text(
-                abbreviation,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
+              Text(abbreviation, style: Theme.of(context).textTheme.bodySmall),
             ],
           ),
         ),
@@ -416,26 +424,18 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (Color background, Color foreground, String label) = switch (true) {
-      _ when game.isLive => (
-          AppTheme.accentRed,
-          Colors.white,
-          'LIVE',
-        ),
+      _ when game.isLive => (AppTheme.accentRed, Colors.white, 'LIVE'),
       _ when game.isFinal => (
-          AppTheme.nbaBlue.withValues(alpha: 0.12),
-          AppTheme.nbaBlue,
-          'FINAL',
-        ),
+        AppTheme.nbaBlue.withValues(alpha: 0.12),
+        AppTheme.nbaBlue,
+        'FINAL',
+      ),
       _ when game.postponed => (
-          Colors.orange.shade100,
-          Colors.orange.shade900,
-          'POSTPONED',
-        ),
-      _ => (
-          Colors.green.shade100,
-          Colors.green.shade900,
-          'UPCOMING',
-        ),
+        Colors.orange.shade100,
+        Colors.orange.shade900,
+        'POSTPONED',
+      ),
+      _ => (Colors.green.shade100, Colors.green.shade900, 'UPCOMING'),
     };
 
     return Container(
@@ -446,7 +446,9 @@ class _StatusBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(color: foreground),
+        style: Theme.of(
+          context,
+        ).textTheme.labelLarge?.copyWith(color: foreground),
       ),
     );
   }
@@ -500,6 +502,35 @@ class _CenteredState extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _FallbackBanner extends StatelessWidget {
+  const _FallbackBanner({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.nbaBlue.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.nbaBlue.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Icon(Icons.wifi_off_rounded, color: AppTheme.nbaBlue),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(message, style: Theme.of(context).textTheme.bodyMedium),
+          ),
+        ],
       ),
     );
   }

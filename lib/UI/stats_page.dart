@@ -11,7 +11,7 @@ enum _StatsSection { teams, players }
 
 class StatsPage extends StatefulWidget {
   StatsPage({super.key, BasketballDataRepository? repository})
-      : repository = repository ?? BasketballRepository();
+    : repository = repository ?? BasketballRepository();
 
   final BasketballDataRepository repository;
 
@@ -41,8 +41,7 @@ class _StatsPageState extends State<StatsPage> {
   Widget build(BuildContext context) {
     return FutureBuilder<StatsDashboard>(
       future: _futureDashboard,
-      builder:
-          (BuildContext context, AsyncSnapshot<StatsDashboard> snapshot) {
+      builder: (BuildContext context, AsyncSnapshot<StatsDashboard> snapshot) {
         return RefreshIndicator(
           color: AppTheme.accentRed,
           onRefresh: _reload,
@@ -132,17 +131,15 @@ class _StatsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String seasonLabel = '$season-${(season + 1).toString().substring(2)}';
+    final String seasonLabel =
+        '$season-${(season + 1).toString().substring(2)}';
 
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: <Color>[
-            AppTheme.courtBlue,
-            AppTheme.nbaBlue,
-          ],
+          colors: <Color>[AppTheme.courtBlue, AppTheme.nbaBlue],
         ),
         borderRadius: BorderRadius.circular(30),
       ),
@@ -153,18 +150,16 @@ class _StatsHeader extends StatelessWidget {
           children: <Widget>[
             Text(
               'Stats Dashboard',
-              style: Theme.of(context)
-                  .textTheme
-                  .displaySmall
-                  ?.copyWith(color: Colors.white),
+              style: Theme.of(
+                context,
+              ).textTheme.displaySmall?.copyWith(color: Colors.white),
             ),
             const SizedBox(height: 8),
             Text(
               'Conference standings, team season numbers, and player leaderboards for $seasonLabel.',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
-                  ?.copyWith(color: Colors.white.withValues(alpha: 0.88)),
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Colors.white.withValues(alpha: 0.88),
+              ),
             ),
           ],
         ),
@@ -186,7 +181,8 @@ class _StatsToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String seasonLabel = '$season-${(season + 1).toString().substring(2)}';
+    final String seasonLabel =
+        '$season-${(season + 1).toString().substring(2)}';
 
     return Wrap(
       spacing: 12,
@@ -236,7 +232,10 @@ class _WarningBanner extends StatelessWidget {
           children: <Widget>[
             Row(
               children: <Widget>[
-                Icon(Icons.warning_amber_rounded, color: Colors.orange.shade900),
+                Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.orange.shade900,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Partial Data',
@@ -311,8 +310,9 @@ class _ConferenceOverview extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        final double cardWidth =
-            constraints.maxWidth > 900 ? (constraints.maxWidth - 16) / 2 : constraints.maxWidth;
+        final double cardWidth = constraints.maxWidth > 900
+            ? (constraints.maxWidth - 16) / 2
+            : constraints.maxWidth;
 
         return Wrap(
           spacing: 16,
@@ -340,10 +340,7 @@ class _ConferenceOverview extends StatelessWidget {
 }
 
 class _ConferenceSummaryCard extends StatelessWidget {
-  const _ConferenceSummaryCard({
-    required this.title,
-    required this.standings,
-  });
+  const _ConferenceSummaryCard({required this.title, required this.standings});
 
   final String title;
   final List<TeamStanding> standings;
@@ -366,8 +363,8 @@ class _ConferenceSummaryCard extends StatelessWidget {
                     Text(
                       '#${standing.conferenceRank}',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppTheme.accentRed,
-                          ),
+                        color: AppTheme.accentRed,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -406,8 +403,9 @@ class _ConferenceSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        final double cardWidth =
-            constraints.maxWidth > 720 ? (constraints.maxWidth - 16) / 2 : constraints.maxWidth;
+        final double cardWidth = constraints.maxWidth > 720
+            ? (constraints.maxWidth - 16) / 2
+            : constraints.maxWidth;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -461,8 +459,8 @@ class _TeamStandingCard extends StatelessWidget {
                   child: Text(
                     standing.team.abbreviation,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          color: AppTheme.nbaBlue,
-                        ),
+                      color: AppTheme.nbaBlue,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -484,8 +482,8 @@ class _TeamStandingCard extends StatelessWidget {
                 Text(
                   '${standing.wins}-${standing.losses}',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: AppTheme.accentRed,
-                      ),
+                    color: AppTheme.accentRed,
+                  ),
                 ),
               ],
             ),
@@ -511,19 +509,22 @@ class _TeamStandingCard extends StatelessWidget {
                 ),
                 _MiniStat(
                   label: 'RPG',
-                  value:
-                      stats != null ? stats!.rebounds.toStringAsFixed(1) : '—',
+                  value: stats != null
+                      ? stats!.rebounds.toStringAsFixed(1)
+                      : '—',
                 ),
                 _MiniStat(
                   label: 'APG',
-                  value:
-                      stats != null ? stats!.assists.toStringAsFixed(1) : '—',
+                  value: stats != null
+                      ? stats!.assists.toStringAsFixed(1)
+                      : '—',
                 ),
                 _MiniStat(
                   label: 'FG%',
                   value: stats != null
-                      ? NumberFormat.percentPattern()
-                          .format(stats!.fieldGoalPct / 100)
+                      ? NumberFormat.percentPattern().format(
+                          stats!.fieldGoalPct / 100,
+                        )
                       : '—',
                 ),
               ],
@@ -583,13 +584,16 @@ class _PlayersDashboard extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        final double cardWidth =
-            constraints.maxWidth > 900 ? (constraints.maxWidth - 16) / 2 : constraints.maxWidth;
+        final double cardWidth = constraints.maxWidth > 900
+            ? (constraints.maxWidth - 16) / 2
+            : constraints.maxWidth;
 
         return Wrap(
           spacing: 16,
           runSpacing: 16,
-          children: leaderboards.map((MapEntry<String, List<PlayerLeader>> entry) {
+          children: leaderboards.map((
+            MapEntry<String, List<PlayerLeader>> entry,
+          ) {
             return SizedBox(
               width: cardWidth,
               child: _LeaderboardCard(
@@ -624,11 +628,15 @@ class _LeaderboardCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(_labelForStat(statType), style: Theme.of(context).textTheme.headlineMedium),
+            Text(
+              _labelForStat(statType),
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
             const SizedBox(height: 12),
             ...leaders.take(5).map((PlayerLeader leader) {
               final String teamAbbreviation =
-                  dashboard.teamsById[leader.player.teamId]?.abbreviation ?? 'NBA';
+                  dashboard.teamsById[leader.player.teamId]?.abbreviation ??
+                  'NBA';
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Row(
@@ -638,8 +646,8 @@ class _LeaderboardCard extends StatelessWidget {
                       child: Text(
                         '#${leader.rank}',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: AppTheme.accentRed,
-                            ),
+                          color: AppTheme.accentRed,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -660,9 +668,8 @@ class _LeaderboardCard extends StatelessWidget {
                     ),
                     Text(
                       leader.value.toStringAsFixed(1),
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: AppTheme.nbaBlue,
-                          ),
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(color: AppTheme.nbaBlue),
                     ),
                   ],
                 ),

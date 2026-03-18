@@ -6,8 +6,8 @@ import 'package:project_jordan/services/news_provider.dart';
 
 class GNewsProvider implements NewsProvider {
   GNewsProvider({http.Client? client, String? apiKey})
-      : _client = client ?? http.Client(),
-        _apiKey = apiKey ?? _defaultApiKey;
+    : _client = client ?? http.Client(),
+      _apiKey = apiKey ?? _defaultApiKey;
 
   static const String _authority = 'gnews.io';
   static const String _defaultApiKey = String.fromEnvironment('GNEWS_API_KEY');
@@ -42,14 +42,20 @@ class GNewsProvider implements NewsProvider {
 
     if (response.statusCode != 200) {
       throw NewsProviderException(
-        (json['errors']?.toString() ?? json['message'] ?? 'Failed to load GNews articles.')
+        (json['errors']?.toString() ??
+                json['message'] ??
+                'Failed to load GNews articles.')
             .toString(),
       );
     }
 
-    final List<dynamic> articlesJson = json['articles'] as List<dynamic>? ?? <dynamic>[];
+    final List<dynamic> articlesJson =
+        json['articles'] as List<dynamic>? ?? <dynamic>[];
     return articlesJson
-        .map((dynamic article) => Article.fromGNewsJson(article as Map<String, dynamic>))
+        .map(
+          (dynamic article) =>
+              Article.fromGNewsJson(article as Map<String, dynamic>),
+        )
         .where((Article article) => article.hasEssentialContent)
         .toList();
   }

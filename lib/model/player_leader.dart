@@ -19,7 +19,9 @@ class PlayerLeader {
 
   factory PlayerLeader.fromJson(Map<String, dynamic> json) {
     return PlayerLeader(
-      player: Player.fromJson(json['player'] as Map<String, dynamic>? ?? <String, dynamic>{}),
+      player: Player.fromJson(
+        json['player'] as Map<String, dynamic>? ?? <String, dynamic>{},
+      ),
       value: (json['value'] as num?)?.toDouble() ?? 0,
       statType: (json['stat_type'] ?? '').toString(),
       rank: json['rank'] as int? ?? 0,

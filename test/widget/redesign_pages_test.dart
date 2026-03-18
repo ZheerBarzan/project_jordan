@@ -13,6 +13,9 @@ import 'package:project_jordan/model/team_standing.dart';
 import 'package:project_jordan/model/teams.dart';
 import 'package:project_jordan/repositories/basketball_repository.dart';
 import 'package:project_jordan/repositories/news_repository.dart';
+import 'package:project_jordan/services/asset_fixture_loader.dart';
+import 'package:project_jordan/services/news_provider.dart';
+import 'package:project_jordan/services/nba_api_service.dart';
 import 'package:project_jordan/theme/app_theme.dart';
 
 void main() {
@@ -46,9 +49,7 @@ void main() {
       ];
     });
 
-    await tester.pumpWidget(
-      _TestApp(child: NewsPage(repository: repository)),
-    );
+    await tester.pumpWidget(_TestApp(child: NewsPage(repository: repository)));
     await tester.pumpAndSettle();
 
     expect(find.text('News feed unavailable'), findsOneWidget);
@@ -82,9 +83,7 @@ void main() {
       dashboard: _dashboard(),
     );
 
-    await tester.pumpWidget(
-      _TestApp(child: ScorePage(repository: repository)),
-    );
+    await tester.pumpWidget(_TestApp(child: ScorePage(repository: repository)));
     await tester.pumpAndSettle();
 
     expect(find.text('Los Angeles Lakers'), findsOneWidget);
@@ -105,9 +104,7 @@ void main() {
       dashboard: _dashboard(),
     );
 
-    await tester.pumpWidget(
-      _TestApp(child: StatsPage(repository: repository)),
-    );
+    await tester.pumpWidget(_TestApp(child: StatsPage(repository: repository)));
     await tester.pumpAndSettle();
 
     expect(find.text('Eastern Conference'), findsOneWidget);
@@ -117,6 +114,54 @@ void main() {
 
     expect(find.text('Points Leaders'), findsOneWidget);
     expect(find.text('Stephen Curry'), findsOneWidget);
+  });
+
+  testWidgets('NewsPage shows fallback banner and demo content', (
+    WidgetTester tester,
+  ) async {
+    final NewsRepository repository = NewsRepository(
+      providers: <NewsProvider>[
+        _WidgetFakeProvider(
+          name: 'NewsAPI',
+          loader: () async =>
+              throw const NewsProviderException('NEWSAPI_API_KEY is missing.'),
+        ),
+      ],
+      fixtureLoader: AssetFixtureLoader(
+        loadString: (_) async => _fallbackNewsJson,
+      ),
+    );
+
+    await tester.pumpWidget(_TestApp(child: NewsPage(repository: repository)));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('Showing bundled demo headlines'),
+      findsOneWidget,
+    );
+    expect(find.text('Fallback story'), findsOneWidget);
+    expect(find.text('News feed unavailable'), findsNothing);
+  });
+
+  testWidgets('ScorePage shows fallback banner and demo games', (
+    WidgetTester tester,
+  ) async {
+    final BasketballRepository repository = BasketballRepository(
+      service: NbaApiService(apiKey: ''),
+      fixtureLoader: AssetFixtureLoader(
+        loadString: (_) async => _fallbackGamesJson,
+      ),
+    );
+
+    await tester.pumpWidget(_TestApp(child: ScorePage(repository: repository)));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('Showing bundled demo scoreboard data'),
+      findsOneWidget,
+    );
+    expect(find.text('Los Angeles Lakers'), findsOneWidget);
+    expect(find.text('Scoreboard unavailable'), findsNothing);
   });
 }
 
@@ -138,6 +183,19 @@ class _FakeNewsRepository implements NewsFeedRepository {
   _FakeNewsRepository(this.loader);
 
   final Future<List<Article>> Function() loader;
+
+  @override
+  Future<List<Article>> fetchLatestNbaNews() => loader();
+}
+
+class _WidgetFakeProvider implements NewsProvider {
+  _WidgetFakeProvider({required this.name, required this.loader});
+
+  final String name;
+  final Future<List<Article>> Function() loader;
+
+  @override
+  String get providerName => name;
 
   @override
   Future<List<Article>> fetchLatestNbaNews() => loader();
@@ -205,10 +263,7 @@ StatsDashboard _dashboard() {
 
   return StatsDashboard(
     season: 2025,
-    teamsById: <int, Team>{
-      warriors.id: warriors,
-      celtics.id: celtics,
-    },
+    teamsById: <int, Team>{warriors.id: warriors, celtics.id: celtics},
     standings: <TeamStanding>[
       TeamStanding(
         team: celtics,
@@ -290,3 +345,97 @@ StatsDashboard _dashboard() {
     warnings: const <String>[],
   );
 }
+
+const String _fallbackNewsJson = '''
+[
+  {
+    "title": "Fallback story",
+    "description": "Fallback summary",
+    "url": "https://example.com/fallback-story",
+    "publishedAt": "2026-03-18T10:00:00Z",
+    "source": {
+      "name": "Fallback Wire"
+    },
+    "urlToImage": null,
+    "fallback_offset_hours": 2
+  },
+  {
+    "title": "Second fallback",
+    "description": "Another summary",
+    "url": "https://example.com/second-fallback",
+    "publishedAt": "2026-03-18T08:00:00Z",
+    "source": {
+      "name": "Fallback Wire"
+    },
+    "urlToImage": null,
+    "fallback_offset_hours": 4
+  }
+]
+''';
+
+const String _fallbackGamesJson = '''
+[
+  {
+    "id": 101,
+    "date": "2026-03-18T00:30:00Z",
+    "home_team_score": 118,
+    "visitor_team_score": 112,
+    "season": 2025,
+    "period": 4,
+    "status": "Final",
+    "time": "7:30 PM ET",
+    "postseason": false,
+    "postponed": false,
+    "fallback_day_offset": 0,
+    "home_team": {
+      "id": 14,
+      "abbreviation": "LAL",
+      "city": "Los Angeles",
+      "conference": "West",
+      "division": "Pacific",
+      "full_name": "Los Angeles Lakers",
+      "name": "Lakers"
+    },
+    "visitor_team": {
+      "id": 2,
+      "abbreviation": "BOS",
+      "city": "Boston",
+      "conference": "East",
+      "division": "Atlantic",
+      "full_name": "Boston Celtics",
+      "name": "Celtics"
+    }
+  },
+  {
+    "id": 102,
+    "date": "2026-03-18T02:00:00Z",
+    "home_team_score": 99,
+    "visitor_team_score": 104,
+    "season": 2025,
+    "period": 3,
+    "status": "3rd Qtr",
+    "time": "9:00 PM ET",
+    "postseason": false,
+    "postponed": false,
+    "fallback_day_offset": 0,
+    "home_team": {
+      "id": 10,
+      "abbreviation": "GSW",
+      "city": "Golden State",
+      "conference": "West",
+      "division": "Pacific",
+      "full_name": "Golden State Warriors",
+      "name": "Warriors"
+    },
+    "visitor_team": {
+      "id": 25,
+      "abbreviation": "OKC",
+      "city": "Oklahoma City",
+      "conference": "West",
+      "division": "Northwest",
+      "full_name": "Oklahoma City Thunder",
+      "name": "Thunder"
+    }
+  }
+]
+''';

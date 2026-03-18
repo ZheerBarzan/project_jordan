@@ -54,7 +54,8 @@ class Article {
       title: (json['title'] ?? "").toString(),
       description: (json['description'] ?? "").toString(),
       url: (json['url'] ?? "").toString(),
-      publishedAt: DateTime.tryParse(json['publishedAt']?.toString() ?? '') ??
+      publishedAt:
+          DateTime.tryParse(json['publishedAt']?.toString() ?? '') ??
           DateTime.now(),
       source: (json['source']?['name'] ?? "").toString(),
       urlToImage: json['image']?.toString(),

@@ -1,0 +1,68 @@
+[
+  {
+    "title": "Playoff race tightens as contenders trade late-season blows",
+    "description": "A packed slate reshaped the standings and sharpened the Western Conference playoff picture.",
+    "url": "https://example.com/nba/playoff-race-tightens",
+    "publishedAt": "2026-03-18T10:00:00Z",
+    "source": {
+      "name": "NBA Daily"
+    },
+    "urlToImage": null,
+    "fallback_offset_hours": 2
+  },
+  {
+    "title": "Coaches lean on smaller lineups ahead of the postseason",
+    "description": "Rotation experiments are accelerating as teams search for defensive flexibility and late-game spacing.",
+    "url": "https://example.com/nba/smaller-lineups",
+    "publishedAt": "2026-03-18T08:00:00Z",
+    "source": {
+      "name": "The Athletic"
+    },
+    "urlToImage": null,
+    "fallback_offset_hours": 4
+  },
+  {
+    "title": "Rookie guards are changing second-unit offense around the league",
+    "description": "Several contenders are getting a lift from young playmakers who can push pace and stabilize bench scoring.",
+    "url": "https://example.com/nba/rookie-guards",
+    "publishedAt": "2026-03-18T06:00:00Z",
+    "source": {
+      "name": "ESPN"
+    },
+    "urlToImage": null,
+    "fallback_offset_hours": 6
+  },
+  {
+    "title": "Injury updates could swing seeding battles this week",
+    "description": "Key returns and day-to-day decisions are likely to reshape matchups across both conferences.",
+    "url": "https://example.com/nba/injury-updates",
+    "publishedAt": "2026-03-18T04:00:00Z",
+    "source": {
+      "name": "Yahoo Sports"
+    },
+    "urlToImage": null,
+    "fallback_offset_hours": 8
+  },
+  {
+    "title": "Transition offense remains the easiest path to efficient scoring",
+    "description": "League tracking data continues to show the gap between early-clock opportunities and half-court creation.",
+    "url": "https://example.com/nba/transition-offense",
+    "publishedAt": "2026-03-18T02:00:00Z",
+    "source": {
+      "name": "CBS Sports"
+    },
+    "urlToImage": null,
+    "fallback_offset_hours": 10
+  },
+  {
+    "title": "Front offices keep one eye on draft assets during the stretch run",
+    "description": "The final weeks are forcing teams to balance playoff urgency against longer-term roster flexibility.",
+    "url": "https://example.com/nba/draft-assets-stretch-run",
+    "publishedAt": "2026-03-18T00:00:00Z",
+    "source": {
+      "name": "Bleacher Report"
+    },
+    "urlToImage": null,
+    "fallback_offset_hours": 12
+  }
+]

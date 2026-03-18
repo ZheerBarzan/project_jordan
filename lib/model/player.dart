@@ -25,7 +25,9 @@ class Player {
       position: (json['position'] ?? '').toString(),
       teamId:
           json['team_id'] as int? ??
-          (nestedTeam is Map<String, dynamic> ? nestedTeam['id'] as int? : null),
+          (nestedTeam is Map<String, dynamic>
+              ? nestedTeam['id'] as int?
+              : null),
     );
   }
 }

@@ -22,14 +22,17 @@ class StatsDashboard {
 
   List<TeamStanding> standingsForConference(String conference) {
     final String normalized = conference.toLowerCase();
-    final List<TeamStanding> filtered = standings
-        .where((TeamStanding standing) =>
-            standing.team.conference.toLowerCase() == normalized)
-        .toList()
-      ..sort(
-        (TeamStanding a, TeamStanding b) =>
-            a.conferenceRank.compareTo(b.conferenceRank),
-      );
+    final List<TeamStanding> filtered =
+        standings
+            .where(
+              (TeamStanding standing) =>
+                  standing.team.conference.toLowerCase() == normalized,
+            )
+            .toList()
+          ..sort(
+            (TeamStanding a, TeamStanding b) =>
+                a.conferenceRank.compareTo(b.conferenceRank),
+          );
     return filtered;
   }
 }
