@@ -96,8 +96,7 @@ class NewsRepository implements NewsFeedRepository, FallbackAwareRepository {
 
       final String key = article.dedupeKey;
       final Article? existing = uniqueArticles[key];
-      if (existing == null ||
-          article.publishedAt.isAfter(existing.publishedAt)) {
+      if (existing == null || _shouldReplace(existing, article)) {
         uniqueArticles[key] = article;
       }
     }
@@ -106,6 +105,21 @@ class NewsRepository implements NewsFeedRepository, FallbackAwareRepository {
       ..sort((Article a, Article b) => b.publishedAt.compareTo(a.publishedAt));
 
     return sorted;
+  }
+
+  bool _shouldReplace(Article existing, Article candidate) {
+    final bool existingHasImage = _hasUsableImage(existing);
+    final bool candidateHasImage = _hasUsableImage(candidate);
+
+    if (candidateHasImage != existingHasImage) {
+      return candidateHasImage;
+    }
+
+    return candidate.publishedAt.isAfter(existing.publishedAt);
+  }
+
+  bool _hasUsableImage(Article article) {
+    return (article.urlToImage ?? '').trim().isNotEmpty;
   }
 
   Future<List<Article>> _loadFallbackArticles() async {

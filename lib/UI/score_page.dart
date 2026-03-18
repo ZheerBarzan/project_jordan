@@ -2,23 +2,31 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:project_jordan/components/scroll_chrome.dart';
 import 'package:intl/intl.dart';
+import 'package:project_jordan/UI/game_detail_page.dart';
+import 'package:project_jordan/components/scroll_chrome.dart';
+import 'package:project_jordan/components/team_logo_badge.dart';
+import 'package:project_jordan/model/game_detail.dart';
 import 'package:project_jordan/model/game_model.dart';
+import 'package:project_jordan/model/team_branding.dart';
 import 'package:project_jordan/repositories/basketball_repository.dart';
 import 'package:project_jordan/repositories/fallback_aware_repository.dart';
+import 'package:project_jordan/repositories/scoreboard_content_repository.dart';
 import 'package:project_jordan/theme/app_theme.dart';
 
-enum _ScoreboardWindow { today, recent, custom }
+enum _ScoreboardSegment { upcoming, previous }
 
 class ScorePage extends StatefulWidget {
   ScorePage({
     super.key,
     BasketballDataRepository? repository,
+    ScoreboardContentRepository? contentRepository,
     this.onChromeVisibilityChanged,
-  }) : repository = repository ?? BasketballRepository();
+  }) : repository = repository ?? BasketballRepository(),
+       contentRepository = contentRepository ?? ScoreboardContentRepository();
 
   final BasketballDataRepository repository;
+  final ScoreboardContentRepository contentRepository;
   final ChromeVisibilityChanged? onChromeVisibilityChanged;
 
   @override
@@ -26,63 +34,69 @@ class ScorePage extends StatefulWidget {
 }
 
 class _ScorePageState extends State<ScorePage> {
-  late Future<List<Game>> _futureGames;
-  _ScoreboardWindow _window = _ScoreboardWindow.today;
-  DateTime _selectedDate = DateTime.now();
+  static const int _upcomingWindowDays = 7;
+  static const int _previousWindowDays = 14;
+
+  late Future<_ScorePageData> _futureData;
+  _ScoreboardSegment _segment = _ScoreboardSegment.upcoming;
 
   @override
   void initState() {
     super.initState();
-    _futureGames = widget.repository.fetchGamesForDate(_selectedDate);
+    _futureData = _loadData();
   }
 
-  Future<void> _loadGames() async {
-    setState(() {
-      switch (_window) {
-        case _ScoreboardWindow.today:
-          _selectedDate = DateTime.now();
-          _futureGames = widget.repository.fetchGamesForDate(_selectedDate);
-          break;
-        case _ScoreboardWindow.recent:
-          _futureGames = widget.repository.fetchRecentGames();
-          break;
-        case _ScoreboardWindow.custom:
-          _futureGames = widget.repository.fetchGamesForDate(_selectedDate);
-          break;
-      }
-    });
-    await _futureGames;
-  }
+  Future<_ScorePageData> _loadData() async {
+    final List<Game> games = await _loadGamesForSegment();
+    final Map<String, TeamBranding> brandingByAbbreviation =
+        await widget.contentRepository.loadTeamBranding();
+    final Map<int, Map<String, dynamic>> enrichmentByGameId =
+        await widget.contentRepository.loadGameDetailEnrichment();
 
-  Future<void> _pickCustomDate() async {
-    final DateTime now = DateTime.now();
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(now.year - 2),
-      lastDate: DateTime(now.year + 1),
+    return _ScorePageData(
+      games: games,
+      brandingByAbbreviation: brandingByAbbreviation,
+      detailEnrichmentByGameId: enrichmentByGameId,
     );
-    if (pickedDate == null) {
+  }
+
+  Future<List<Game>> _loadGamesForSegment() {
+    switch (_segment) {
+      case _ScoreboardSegment.upcoming:
+        return widget.repository.fetchUpcomingGames(days: _upcomingWindowDays);
+      case _ScoreboardSegment.previous:
+        return widget.repository.fetchPreviousGames(days: _previousWindowDays);
+    }
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _futureData = _loadData();
+    });
+    await _futureData;
+  }
+
+  void _changeSegment(_ScoreboardSegment segment) {
+    if (_segment == segment) {
       return;
     }
 
     setState(() {
-      _window = _ScoreboardWindow.custom;
-      _selectedDate = pickedDate;
-      _futureGames = widget.repository.fetchGamesForDate(_selectedDate);
+      _segment = segment;
+      _futureData = _loadData();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Game>>(
-      future: _futureGames,
-      builder: (BuildContext context, AsyncSnapshot<List<Game>> snapshot) {
+    return FutureBuilder<_ScorePageData>(
+      future: _futureData,
+      builder: (BuildContext context, AsyncSnapshot<_ScorePageData> snapshot) {
         return NotificationListener<UserScrollNotification>(
           onNotification: _handleScrollNotification,
           child: RefreshIndicator(
             color: AppTheme.accentRed,
-            onRefresh: _loadGames,
+            onRefresh: _refresh,
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
@@ -95,16 +109,9 @@ class _ScorePageState extends State<ScorePage> {
                       children: <Widget>[
                         const _ScoreHeader(),
                         const SizedBox(height: 18),
-                        _ScoreFilters(
-                          currentWindow: _window,
-                          selectedDate: _selectedDate,
-                          onWindowChanged: (_ScoreboardWindow window) {
-                            setState(() {
-                              _window = window;
-                            });
-                            _loadGames();
-                          },
-                          onPickCustomDate: _pickCustomDate,
+                        _SegmentSelector(
+                          selectedSegment: _segment,
+                          onSelectionChanged: _changeSegment,
                         ),
                         const SizedBox(height: 18),
                         _buildBody(context, snapshot),
@@ -137,7 +144,10 @@ class _ScorePageState extends State<ScorePage> {
     return false;
   }
 
-  Widget _buildBody(BuildContext context, AsyncSnapshot<List<Game>> snapshot) {
+  Widget _buildBody(
+    BuildContext context,
+    AsyncSnapshot<_ScorePageData> snapshot,
+  ) {
     final bool isUsingFallbackData =
         widget.repository is FallbackAwareRepository &&
         (widget.repository as FallbackAwareRepository)
@@ -145,10 +155,12 @@ class _ScorePageState extends State<ScorePage> {
             .value;
 
     if (snapshot.connectionState == ConnectionState.waiting) {
-      return const _CenteredState(
+      return _CenteredState(
         icon: Icons.sports_basketball_outlined,
-        title: 'Loading scoreboard',
-        message: 'Pulling the latest NBA game slate and statuses.',
+        title: 'Loading ${_segment.label.toLowerCase()} games',
+        message: _segment == _ScoreboardSegment.upcoming
+            ? 'Building the next week of NBA matchups.'
+            : 'Pulling recent results and final statuses.',
         showProgress: true,
       );
     }
@@ -159,25 +171,27 @@ class _ScorePageState extends State<ScorePage> {
         title: 'Scoreboard unavailable',
         message: snapshot.error.toString(),
         actionLabel: 'Retry',
-        onAction: _loadGames,
+        onAction: _refresh,
       );
     }
 
-    final List<Game> games = snapshot.data ?? <Game>[];
-    if (games.isEmpty) {
+    final _ScorePageData data = snapshot.data!;
+    if (data.games.isEmpty) {
       return _CenteredState(
         icon: Icons.event_busy_outlined,
-        title: 'No games found',
-        message:
-            'There are no NBA games in this window. Try another date or switch back to recent games.',
+        title: _segment == _ScoreboardSegment.upcoming
+            ? 'No upcoming games found'
+            : 'No previous games found',
+        message: _segment == _ScoreboardSegment.upcoming
+            ? 'There are no scheduled or live NBA games in the next 7 days.'
+            : 'There are no completed NBA games in the last 14 days.',
         actionLabel: 'Refresh',
-        onAction: _loadGames,
+        onAction: _refresh,
       );
     }
 
-    final LinkedHashMap<DateTime, List<Game>> groupedGames = _groupGamesByDate(
-      games,
-    );
+    final LinkedHashMap<DateTime, List<GameDetail>> groupedGames =
+        _groupGamesByDate(data);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,21 +203,31 @@ class _ScorePageState extends State<ScorePage> {
           ),
           const SizedBox(height: 16),
         ],
-        ...groupedGames.entries.map((MapEntry<DateTime, List<Game>> entry) {
+        _SegmentOverview(segment: _segment, totalGames: data.games.length),
+        const SizedBox(height: 16),
+        ...groupedGames.entries.map((MapEntry<DateTime, List<GameDetail>> entry) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  DateFormat('EEEE, MMM d').format(entry.key),
+                  _sectionLabel(entry.key),
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 10),
                 ...entry.value.map(
-                  (Game game) => Padding(
+                  (GameDetail detail) => Padding(
                     padding: const EdgeInsets.only(bottom: 14),
-                    child: _GameCard(game: game),
+                    child: _GameCard(
+                      key: ValueKey<int>(detail.game.id),
+                      detail: detail,
+                      homeBranding: data.brandingByAbbreviation[
+                          detail.game.homeTeam.abbreviation.toUpperCase()],
+                      visitorBranding: data.brandingByAbbreviation[
+                          detail.game.visitorTeam.abbreviation.toUpperCase()],
+                      onTap: () => _openGameDetail(context, data, detail),
+                    ),
                   ),
                 ),
               ],
@@ -214,19 +238,83 @@ class _ScorePageState extends State<ScorePage> {
     );
   }
 
-  LinkedHashMap<DateTime, List<Game>> _groupGamesByDate(List<Game> games) {
-    final LinkedHashMap<DateTime, List<Game>> grouped =
-        LinkedHashMap<DateTime, List<Game>>();
-    for (final Game game in games) {
+  LinkedHashMap<DateTime, List<GameDetail>> _groupGamesByDate(
+    _ScorePageData data,
+  ) {
+    final LinkedHashMap<DateTime, List<GameDetail>> grouped =
+        LinkedHashMap<DateTime, List<GameDetail>>();
+
+    for (final Game game in data.games) {
       final DateTime key = DateTime(
         game.parsedDate.year,
         game.parsedDate.month,
         game.parsedDate.day,
       );
-      grouped.putIfAbsent(key, () => <Game>[]).add(game);
+      final GameDetail detail = widget.contentRepository.buildGameDetail(
+        game,
+        data.detailEnrichmentByGameId,
+      );
+      grouped.putIfAbsent(key, () => <GameDetail>[]).add(detail);
     }
+
     return grouped;
   }
+
+  void _openGameDetail(
+    BuildContext context,
+    _ScorePageData data,
+    GameDetail detail,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) => GameDetailPage(
+          detail: detail,
+          homeBranding: data.brandingByAbbreviation[
+              detail.game.homeTeam.abbreviation.toUpperCase()],
+          visitorBranding: data.brandingByAbbreviation[
+              detail.game.visitorTeam.abbreviation.toUpperCase()],
+        ),
+      ),
+    );
+  }
+
+  String _sectionLabel(DateTime date) {
+    final DateTime today = DateTime.now();
+    final DateTime normalizedToday =
+        DateTime(today.year, today.month, today.day);
+    final DateTime normalizedDate = DateTime(date.year, date.month, date.day);
+    final int difference = normalizedDate.difference(normalizedToday).inDays;
+
+    switch (difference) {
+      case 0:
+        return 'Today • ${DateFormat('EEEE, MMM d').format(date)}';
+      case 1:
+        return 'Tomorrow • ${DateFormat('EEEE, MMM d').format(date)}';
+      case -1:
+        return 'Yesterday • ${DateFormat('EEEE, MMM d').format(date)}';
+      default:
+        return DateFormat('EEEE, MMM d').format(date);
+    }
+  }
+}
+
+class _ScorePageData {
+  const _ScorePageData({
+    required this.games,
+    required this.brandingByAbbreviation,
+    required this.detailEnrichmentByGameId,
+  });
+
+  final List<Game> games;
+  final Map<String, TeamBranding> brandingByAbbreviation;
+  final Map<int, Map<String, dynamic>> detailEnrichmentByGameId;
+}
+
+extension on _ScoreboardSegment {
+  String get label => switch (this) {
+    _ScoreboardSegment.upcoming => 'Upcoming',
+    _ScoreboardSegment.previous => 'Previous',
+  };
 }
 
 class _ScoreHeader extends StatelessWidget {
@@ -249,14 +337,14 @@ class _ScoreHeader extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
-              'League Scoreboard',
+              'League Game Center',
               style: Theme.of(
                 context,
               ).textTheme.displaySmall?.copyWith(color: Colors.white),
             ),
             const SizedBox(height: 8),
             Text(
-              'Today, recent slates, and game-day status cards ordered for quick scanning.',
+              'Upcoming matchups, recent results, and richer game cards with team branding and deeper detail screens.',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Colors.white.withValues(alpha: 0.88),
               ),
@@ -268,102 +356,227 @@ class _ScoreHeader extends StatelessWidget {
   }
 }
 
-class _ScoreFilters extends StatelessWidget {
-  const _ScoreFilters({
-    required this.currentWindow,
-    required this.selectedDate,
-    required this.onWindowChanged,
-    required this.onPickCustomDate,
+class _SegmentSelector extends StatelessWidget {
+  const _SegmentSelector({
+    required this.selectedSegment,
+    required this.onSelectionChanged,
   });
 
-  final _ScoreboardWindow currentWindow;
-  final DateTime selectedDate;
-  final ValueChanged<_ScoreboardWindow> onWindowChanged;
-  final VoidCallback onPickCustomDate;
+  final _ScoreboardSegment selectedSegment;
+  final ValueChanged<_ScoreboardSegment> onSelectionChanged;
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: <Widget>[
-        ChoiceChip(
-          label: const Text('Today'),
-          selected: currentWindow == _ScoreboardWindow.today,
-          onSelected: (_) => onWindowChanged(_ScoreboardWindow.today),
+    return SegmentedButton<_ScoreboardSegment>(
+      showSelectedIcon: false,
+      segments: const <ButtonSegment<_ScoreboardSegment>>[
+        ButtonSegment<_ScoreboardSegment>(
+          value: _ScoreboardSegment.upcoming,
+          label: Text('Upcoming'),
+          icon: Icon(Icons.upcoming_rounded),
         ),
-        ChoiceChip(
-          label: const Text('Recent'),
-          selected: currentWindow == _ScoreboardWindow.recent,
-          onSelected: (_) => onWindowChanged(_ScoreboardWindow.recent),
-        ),
-        OutlinedButton.icon(
-          onPressed: onPickCustomDate,
-          icon: const Icon(Icons.calendar_month_rounded),
-          label: Text(
-            currentWindow == _ScoreboardWindow.custom
-                ? DateFormat('MMM d').format(selectedDate)
-                : 'Pick date',
-          ),
+        ButtonSegment<_ScoreboardSegment>(
+          value: _ScoreboardSegment.previous,
+          label: Text('Previous'),
+          icon: Icon(Icons.history_rounded),
         ),
       ],
+      selected: <_ScoreboardSegment>{selectedSegment},
+      onSelectionChanged: (Set<_ScoreboardSegment> selection) {
+        onSelectionChanged(selection.first);
+      },
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.resolveWith<Color?>(
+          (Set<WidgetState> states) {
+            if (states.contains(WidgetState.selected)) {
+              return AppTheme.accentRed;
+            }
+            return Colors.white;
+          },
+        ),
+        foregroundColor: WidgetStateProperty.resolveWith<Color?>(
+          (Set<WidgetState> states) {
+            if (states.contains(WidgetState.selected)) {
+              return Colors.white;
+            }
+            return AppTheme.courtBlue;
+          },
+        ),
+        padding: const WidgetStatePropertyAll<EdgeInsets>(
+          EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        ),
+      ),
+    );
+  }
+}
+
+class _SegmentOverview extends StatelessWidget {
+  const _SegmentOverview({
+    required this.segment,
+    required this.totalGames,
+  });
+
+  final _ScoreboardSegment segment;
+  final int totalGames;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Row(
+          children: <Widget>[
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: AppTheme.nbaBlue.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Icon(
+                segment == _ScoreboardSegment.upcoming
+                    ? Icons.event_available_rounded
+                    : Icons.scoreboard_outlined,
+                color: AppTheme.nbaBlue,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    segment == _ScoreboardSegment.upcoming
+                        ? 'Next 7 days'
+                        : 'Last 14 days',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    segment == _ScoreboardSegment.upcoming
+                        ? 'Live games and scheduled matchups ordered to keep the next slate readable.'
+                        : 'Completed results, finals, and recent status changes grouped by date.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              '$totalGames games',
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: AppTheme.accentRed,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
 class _GameCard extends StatelessWidget {
-  const _GameCard({required this.game});
+  const _GameCard({
+    super.key,
+    required this.detail,
+    required this.homeBranding,
+    required this.visitorBranding,
+    required this.onTap,
+  });
 
-  final Game game;
+  final GameDetail detail;
+  final TeamBranding? homeBranding;
+  final TeamBranding? visitorBranding;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
+    final Color visitorColor =
+        _brandColor(visitorBranding, fallback: AppTheme.nbaBlue);
+    final Color homeColor = _brandColor(homeBranding, fallback: AppTheme.courtBlue);
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        key: ValueKey<String>('score-card-${detail.game.id}'),
+        onTap: onTap,
         child: Column(
           children: <Widget>[
-            Row(
-              children: <Widget>[
-                _StatusBadge(game: game),
-                const Spacer(),
-                if (game.postseason)
-                  Text(
-                    'POSTSEASON',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: AppTheme.accentRed,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            _TeamScoreRow(
-              abbreviation: game.visitorTeam.abbreviation,
-              teamName: game.visitorTeam.fullName,
-              score: game.visitorTeamScore,
-              emphasize: game.visitorTeamScore > game.homeTeamScore,
-            ),
-            const SizedBox(height: 14),
-            _TeamScoreRow(
-              abbreviation: game.homeTeam.abbreviation,
-              teamName: game.homeTeam.fullName,
-              score: game.homeTeamScore,
-              emphasize: game.homeTeamScore >= game.visitorTeamScore,
-            ),
-            const SizedBox(height: 18),
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: Text(
-                    _detailText(game),
-                    style: theme.textTheme.bodyMedium,
-                  ),
+            Container(
+              height: 6,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: <Color>[visitorColor, homeColor],
                 ),
-                Text('Season ${game.season}', style: theme.textTheme.bodySmall),
-              ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      _StatusBadge(detail: detail),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          DateFormat('EEE • h:mm a').format(detail.game.parsedDate),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                      const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 16,
+                        color: AppTheme.courtBlue,
+                      ),
+                    ],
+                  ),
+                  if ((detail.headline ?? '').trim().isNotEmpty) ...<Widget>[
+                    const SizedBox(height: 14),
+                    Text(
+                      detail.headline!,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ],
+                  const SizedBox(height: 18),
+                  _TeamRow(
+                    teamName: detail.game.visitorTeam.fullName,
+                    abbreviation: detail.game.visitorTeam.abbreviation,
+                    branding: visitorBranding,
+                    score: detail.game.isScheduled ? null : detail.game.visitorTeamScore,
+                    emphasize: !detail.game.isScheduled &&
+                        detail.game.visitorTeamScore > detail.game.homeTeamScore,
+                    roleLabel: 'AWAY',
+                  ),
+                  const SizedBox(height: 14),
+                  _TeamRow(
+                    teamName: detail.game.homeTeam.fullName,
+                    abbreviation: detail.game.homeTeam.abbreviation,
+                    branding: homeBranding,
+                    score: detail.game.isScheduled ? null : detail.game.homeTeamScore,
+                    emphasize: !detail.game.isScheduled &&
+                        detail.game.homeTeamScore >= detail.game.visitorTeamScore,
+                    roleLabel: 'HOME',
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Text(
+                          _footerText(detail),
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                      Text(
+                        detail.game.postseason ? 'POSTSEASON' : 'Season ${detail.game.season}',
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: AppTheme.accentRed,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -371,60 +584,60 @@ class _GameCard extends StatelessWidget {
     );
   }
 
-  String _detailText(Game game) {
-    if (game.postponed) {
-      return 'Postponed';
+  String _footerText(GameDetail detail) {
+    if (detail.game.postponed) {
+      return 'Postponed${detail.hasVenue ? ' • ${detail.arena}' : ''}';
     }
-    if (game.isLive) {
-      if (game.status == 'Halftime') {
-        return 'Halftime';
-      }
-      return 'Live • ${game.status}';
-    }
-    if (game.isFinal) {
-      return 'Final • ${DateFormat('h:mm a').format(game.parsedDate)} tip-off';
-    }
-    return 'Scheduled • ${DateFormat('h:mm a').format(game.parsedDate)}';
+
+    final String prefix = switch (true) {
+      _ when detail.game.isLive => 'Live coverage',
+      _ when detail.game.isFinal => 'Completed',
+      _ => 'Preview',
+    };
+
+    final String suffix = detail.hasVenue
+        ? detail.arena!
+        : detail.hasLocation
+            ? detail.location!
+            : detail.game.homeTeam.city;
+    return '$prefix • $suffix';
+  }
+
+  Color _brandColor(TeamBranding? branding, {required Color fallback}) {
+    final int? colorValue = branding?.primaryColorValue;
+    return colorValue == null ? fallback : Color(colorValue);
   }
 }
 
-class _TeamScoreRow extends StatelessWidget {
-  const _TeamScoreRow({
-    required this.abbreviation,
+class _TeamRow extends StatelessWidget {
+  const _TeamRow({
     required this.teamName,
+    required this.abbreviation,
+    required this.branding,
     required this.score,
     required this.emphasize,
+    required this.roleLabel,
   });
 
-  final String abbreviation;
   final String teamName;
-  final int score;
+  final String abbreviation;
+  final TeamBranding? branding;
+  final int? score;
   final bool emphasize;
+  final String roleLabel;
 
   @override
   Widget build(BuildContext context) {
-    final TextStyle? scoreStyle = Theme.of(context).textTheme.displaySmall
-        ?.copyWith(
-          fontSize: 38,
-          color: emphasize ? AppTheme.accentRed : AppTheme.nbaBlue,
-        );
+    final Color accent = emphasize ? AppTheme.accentRed : AppTheme.nbaBlue;
 
     return Row(
       children: <Widget>[
-        Container(
-          width: 70,
-          height: 70,
-          decoration: BoxDecoration(
-            color: AppTheme.nbaBlue.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(22),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            abbreviation,
-            style: Theme.of(
-              context,
-            ).textTheme.headlineMedium?.copyWith(color: AppTheme.nbaBlue),
-          ),
+        TeamLogoBadge(
+          abbreviation: abbreviation,
+          teamName: teamName,
+          branding: branding,
+          size: 60,
+          borderRadius: 22,
         ),
         const SizedBox(width: 14),
         Expanded(
@@ -432,31 +645,55 @@ class _TeamScoreRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text(teamName, style: Theme.of(context).textTheme.titleLarge),
-              Text(abbreviation, style: Theme.of(context).textTheme.bodySmall),
+              const SizedBox(height: 3),
+              Text(
+                '$abbreviation • $roleLabel',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ],
           ),
         ),
-        Text('$score', style: scoreStyle),
+        score == null
+            ? Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  roleLabel,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: accent,
+                  ),
+                ),
+              )
+            : Text(
+                '$score',
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  fontSize: 42,
+                  color: accent,
+                ),
+              ),
       ],
     );
   }
 }
 
 class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.game});
+  const _StatusBadge({required this.detail});
 
-  final Game game;
+  final GameDetail detail;
 
   @override
   Widget build(BuildContext context) {
     final (Color background, Color foreground, String label) = switch (true) {
-      _ when game.isLive => (AppTheme.accentRed, Colors.white, 'LIVE'),
-      _ when game.isFinal => (
+      _ when detail.game.isLive => (AppTheme.accentRed, Colors.white, 'LIVE'),
+      _ when detail.game.isFinal => (
         AppTheme.nbaBlue.withValues(alpha: 0.12),
         AppTheme.nbaBlue,
         'FINAL',
       ),
-      _ when game.postponed => (
+      _ when detail.game.postponed => (
         Colors.orange.shade100,
         Colors.orange.shade900,
         'POSTPONED',
@@ -521,7 +758,7 @@ class _CenteredState extends StatelessWidget {
               const SizedBox(height: 18),
               ElevatedButton(
                 onPressed: () {
-                  onAction?.call();
+                  onAction!();
                 },
                 child: Text(actionLabel!),
               ),
@@ -541,20 +778,23 @@ class _FallbackBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.nbaBlue.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.nbaBlue.withValues(alpha: 0.22)),
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Colors.orange.shade200),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Icon(Icons.wifi_off_rounded, color: AppTheme.nbaBlue),
+          Icon(Icons.info_outline, color: Colors.orange.shade900),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(message, style: Theme.of(context).textTheme.bodyMedium),
+            child: Text(
+              message,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.orange.shade900,
+              ),
+            ),
           ),
         ],
       ),

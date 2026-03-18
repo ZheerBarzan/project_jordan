@@ -1,0 +1,152 @@
+{
+  "ATL": {
+    "logoAsset": "images/nba/ATL.png",
+    "primaryColor": "#C8102E",
+    "secondaryColor": "#FDB927"
+  },
+  "BOS": {
+    "logoAsset": "images/nba/BOS.png",
+    "primaryColor": "#007A33",
+    "secondaryColor": "#BA9653"
+  },
+  "BKN": {
+    "logoAsset": "images/nba/BKN.png",
+    "primaryColor": "#000000",
+    "secondaryColor": "#FFFFFF"
+  },
+  "CHA": {
+    "logoAsset": "images/nba/CHA.png",
+    "primaryColor": "#1D1160",
+    "secondaryColor": "#00788C"
+  },
+  "CHI": {
+    "logoAsset": "images/nba/CHI.png",
+    "primaryColor": "#CE1141",
+    "secondaryColor": "#000000"
+  },
+  "CLE": {
+    "logoAsset": "images/nba/CLE.png",
+    "primaryColor": "#6F263D",
+    "secondaryColor": "#FFB81C"
+  },
+  "DAL": {
+    "logoAsset": "images/nba/DAL.png",
+    "primaryColor": "#00538C",
+    "secondaryColor": "#B8C4CA"
+  },
+  "DEN": {
+    "logoAsset": "images/nba/DEN.png",
+    "primaryColor": "#0E2240",
+    "secondaryColor": "#FEC524"
+  },
+  "DET": {
+    "logoAsset": "images/nba/DET.png",
+    "primaryColor": "#C8102E",
+    "secondaryColor": "#1D42BA"
+  },
+  "GSW": {
+    "logoAsset": "images/nba/GSW.png",
+    "primaryColor": "#1D428A",
+    "secondaryColor": "#FFC72C"
+  },
+  "HOU": {
+    "logoAsset": "images/nba/HOU.png",
+    "primaryColor": "#CE1141",
+    "secondaryColor": "#000000"
+  },
+  "IND": {
+    "logoAsset": "images/nba/IND.png",
+    "primaryColor": "#002D62",
+    "secondaryColor": "#FDBB30"
+  },
+  "LAC": {
+    "logoAsset": "images/nba/LAC.png",
+    "primaryColor": "#C8102E",
+    "secondaryColor": "#1D428A"
+  },
+  "LAL": {
+    "logoAsset": "images/nba/LAL.png",
+    "primaryColor": "#552583",
+    "secondaryColor": "#FDB927"
+  },
+  "MEM": {
+    "logoAsset": "images/nba/MEM.png",
+    "primaryColor": "#5D76A9",
+    "secondaryColor": "#12173F"
+  },
+  "MIA": {
+    "logoAsset": "images/nba/MIA.png",
+    "primaryColor": "#98002E",
+    "secondaryColor": "#F9A01B"
+  },
+  "MIL": {
+    "logoAsset": "images/nba/MIL.png",
+    "primaryColor": "#00471B",
+    "secondaryColor": "#EEE1C6"
+  },
+  "MIN": {
+    "logoAsset": "images/nba/MIN.png",
+    "primaryColor": "#0C2340",
+    "secondaryColor": "#78BE20"
+  },
+  "NOP": {
+    "logoAsset": "images/nba/NOP.png",
+    "primaryColor": "#0C2340",
+    "secondaryColor": "#C8102E"
+  },
+  "NYK": {
+    "logoAsset": "images/nba/NYK.png",
+    "primaryColor": "#006BB6",
+    "secondaryColor": "#F58426"
+  },
+  "OKC": {
+    "logoAsset": "images/nba/OKC.png",
+    "primaryColor": "#007AC1",
+    "secondaryColor": "#EF3B24"
+  },
+  "ORL": {
+    "logoAsset": "images/nba/ORL.png",
+    "primaryColor": "#0077C0",
+    "secondaryColor": "#C4CED4"
+  },
+  "PHI": {
+    "logoAsset": "images/nba/PHI.png",
+    "primaryColor": "#006BB6",
+    "secondaryColor": "#ED174C"
+  },
+  "PHX": {
+    "logoAsset": "images/nba/PHX.png",
+    "primaryColor": "#1D1160",
+    "secondaryColor": "#E56020"
+  },
+  "POR": {
+    "logoAsset": "images/nba/POR.png",
+    "primaryColor": "#E03A3E",
+    "secondaryColor": "#000000"
+  },
+  "SAC": {
+    "logoAsset": "images/nba/SAC.png",
+    "primaryColor": "#5A2D81",
+    "secondaryColor": "#63727A"
+  },
+  "SAS": {
+    "logoAsset": "images/nba/SAS.png",
+    "primaryColor": "#000000",
+    "secondaryColor": "#C4CED4"
+  },
+  "TOR": {
+    "logoAsset": "images/nba/TOR.png",
+    "primaryColor": "#CE1141",
+    "secondaryColor": "#000000"
+  },
+  "UTA": {
+    "logoAsset": "images/nba/UTA.png",
+    "primaryColor": "#002B5C",
+    "secondaryColor": "#00471B"
+  },
+  "WAS": {
+    "logoAsset": "images/nba/WAS.png",
+    "primaryColor": "#002B5C",
+    "secondaryColor": "#E31837"
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "101": {
+    "arena": "Crypto.com Arena",
+    "location": "Los Angeles, California",
+    "headline": "Lakers close late against Boston",
+    "summary": "Los Angeles leaned on a fourth-quarter run to separate from Boston after a tight three-quarter game. The final stretch swung on second-chance points and a cleaner half-court offense.",
+    "notes": [
+      "Lakers finished on a 12-4 run.",
+      "Boston won the paint battle but lost the turnover margin.",
+      "Playoff-style pace in the second half."
+    ],
+    "homeLineScores": [28, 31, 25, 34],
+    "visitorLineScores": [30, 27, 28, 27]
+  },
+  "102": {
+    "arena": "Chase Center",
+    "location": "San Francisco, California",
+    "headline": "Thunder push the tempo in a live West battle",
+    "summary": "Oklahoma City has generated early offense off misses while Golden State has kept contact with half-court shooting. The closing stretch is set up for a guard-driven finish.",
+    "notes": [
+      "Thunder lead transition scoring.",
+      "Warriors are ahead from deep through three quarters.",
+      "Game pace remains high entering the fourth."
+    ],
+    "homeLineScores": [32, 29, 38],
+    "visitorLineScores": [35, 31, 38]
+  },
+  "103": {
+    "arena": "Madison Square Garden",
+    "location": "New York, New York",
+    "headline": "Knicks edge Miami in crunch time",
+    "summary": "New York controlled the glass late and executed better in the last two minutes to hold off Miami. The final possessions were decided by rebounding and free throws.",
+    "notes": [
+      "Knicks won the rebounding margin late.",
+      "Miami cut it to one twice in the fourth.",
+      "New York closed with eight straight made free throws."
+    ],
+    "homeLineScores": [29, 30, 27, 35],
+    "visitorLineScores": [24, 34, 29, 30]
+  },
+  "106": {
+    "arena": "Ball Arena",
+    "location": "Denver, Colorado",
+    "headline": "Star creators headline tomorrow's West matchup",
+    "summary": "Denver hosts Dallas in a half-court heavy meeting that should turn on pace control, defensive rebounding, and late-clock execution.",
+    "notes": [
+      "Denver enters with home-court advantage.",
+      "Dallas will try to flatten the game into late-clock possessions.",
+      "Watch the turnover battle in the opening quarter."
+    ],
+    "homeLineScores": [0, 0, 0, 0],
+    "visitorLineScores": [0, 0, 0, 0]
+  },
+  "107": {
+    "arena": "Fiserv Forum",
+    "location": "Milwaukee, Wisconsin",
+    "headline": "Central contenders meet in Milwaukee",
+    "summary": "Milwaukee and Cleveland bring contrasting tempos into a matchup that should reward the team that owns the glass and protects the rim.",
+    "notes": [
+      "Milwaukee hosts the second night of a back-to-back stand.",
+      "Cleveland's defense will test the Bucks at the nail.",
+      "Expect a physical game inside."
+    ],
+    "homeLineScores": [0, 0, 0, 0],
+    "visitorLineScores": [0, 0, 0, 0]
+  },
+  "108": {
+    "arena": "Target Center",
+    "location": "Minneapolis, Minnesota",
+    "headline": "Length and pace collide in Minneapolis",
+    "summary": "Minnesota's size meets Memphis' pressure in a game that could swing on who creates cleaner paint touches without giving away transition chances.",
+    "notes": [
+      "Minnesota will try to own the glass.",
+      "Memphis wants to create extra possessions.",
+      "Half-court shot quality could decide it."
+    ],
+    "homeLineScores": [0, 0, 0, 0],
+    "visitorLineScores": [0, 0, 0, 0]
+  },
+  "109": {
+    "arena": "Crypto.com Arena",
+    "location": "Los Angeles, California",
+    "headline": "Late-week spotlight game in Los Angeles",
+    "summary": "Oklahoma City visits Los Angeles for a marquee late-night window, with primary creation and transition defense likely deciding the matchup.",
+    "notes": [
+      "Thunder aim to pressure the ball early.",
+      "Lakers will look for paint pressure and foul-line volume.",
+      "Bench scoring could swing the second quarter."
+    ],
+    "homeLineScores": [0, 0, 0, 0],
+    "visitorLineScores": [0, 0, 0, 0]
+  }
+}

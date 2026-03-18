@@ -102,6 +102,45 @@ void main() {
     expect(repository.isUsingFallbackData.value, isTrue);
     expect(articles.first.source, 'Fallback Wire');
   });
+
+  test('NewsRepository prefers duplicate articles with images', () async {
+    final NewsRepository repository = NewsRepository(
+      providers: <NewsProvider>[
+        _FakeProvider(
+          name: 'Primary',
+          loader: () async => <Article>[
+            Article(
+              title: 'Story',
+              description: 'Newer without image',
+              url: 'https://example.com/story',
+              publishedAt: DateTime.parse('2026-03-17T11:00:00Z'),
+              source: 'ESPN',
+              urlToImage: null,
+            ),
+          ],
+        ),
+        _FakeProvider(
+          name: 'Secondary',
+          loader: () async => <Article>[
+            Article(
+              title: 'Story',
+              description: 'Slightly older with image',
+              url: 'https://example.com/story',
+              publishedAt: DateTime.parse('2026-03-17T10:00:00Z'),
+              source: 'Yahoo Sports',
+              urlToImage: 'https://example.com/story.png',
+            ),
+          ],
+        ),
+      ],
+    );
+
+    final List<Article> articles = await repository.fetchLatestNbaNews();
+
+    expect(articles, hasLength(1));
+    expect(articles.single.source, 'Yahoo Sports');
+    expect(articles.single.urlToImage, 'https://example.com/story.png');
+  });
 }
 
 class _FakeProvider implements NewsProvider {

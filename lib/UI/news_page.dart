@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:project_jordan/UI/article_reader_page.dart';
 import 'package:project_jordan/components/scroll_chrome.dart';
@@ -308,11 +307,9 @@ class _NewsHeader extends StatelessWidget {
           children: <Widget>[
             Text(
               'The Daily Wire',
-              style: GoogleFonts.newsreader(
-                fontSize: 42,
-                height: 1,
-                fontWeight: FontWeight.w700,
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
                 color: AppTheme.ink,
+                fontSize: 42,
               ),
             ),
             const SizedBox(height: 10),
@@ -444,11 +441,9 @@ class _LeadStoryCard extends StatelessWidget {
                     article.title,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.newsreader(
-                      fontSize: 34,
-                      height: 1.05,
-                      fontWeight: FontWeight.w700,
+                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
                       color: AppTheme.ink,
+                      fontSize: 34,
                     ),
                   ),
                   if (article.description.trim().isNotEmpty) ...<Widget>[
@@ -530,11 +525,9 @@ class _ListStoryCardBody extends StatelessWidget {
                 article.title,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.newsreader(
-                  fontSize: 28,
-                  height: 1.08,
-                  fontWeight: FontWeight.w700,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   color: AppTheme.ink,
+                  fontSize: 28,
                 ),
               ),
               if (article.description.trim().isNotEmpty) ...<Widget>[
@@ -586,11 +579,9 @@ class _CompactStoryCardBody extends StatelessWidget {
                   article.title,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.newsreader(
-                    fontSize: 24,
-                    height: 1.12,
-                    fontWeight: FontWeight.w700,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: AppTheme.ink,
+                    fontSize: 24,
                   ),
                 ),
                 if (article.description.trim().isNotEmpty) ...<Widget>[
@@ -643,6 +634,7 @@ class _StoryImageFallback extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
+      key: const Key('story-fallback-image'),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -651,10 +643,11 @@ class _StoryImageFallback extends StatelessWidget {
         ),
       ),
       child: Center(
-        child: Icon(
-          Icons.newspaper_rounded,
-          size: 60,
-          color: Colors.white.withValues(alpha: 0.9),
+        child: Image.asset(
+          'images/nba.png',
+          key: const Key('story-fallback-image-asset'),
+          width: 108,
+          fit: BoxFit.contain,
         ),
       ),
     );
@@ -725,11 +718,9 @@ class _NewsStateCard extends StatelessWidget {
             const SizedBox(height: 14),
             Text(
               title,
-              style: GoogleFonts.newsreader(
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.ink,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(color: AppTheme.ink),
             ),
             const SizedBox(height: 8),
             Text(

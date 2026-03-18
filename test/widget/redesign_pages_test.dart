@@ -16,6 +16,7 @@ import 'package:project_jordan/model/team_standing.dart';
 import 'package:project_jordan/model/teams.dart';
 import 'package:project_jordan/repositories/basketball_repository.dart';
 import 'package:project_jordan/repositories/news_repository.dart';
+import 'package:project_jordan/repositories/scoreboard_content_repository.dart';
 import 'package:project_jordan/services/asset_fixture_loader.dart';
 import 'package:project_jordan/services/news_provider.dart';
 import 'package:project_jordan/services/nba_api_service.dart';
@@ -51,24 +52,14 @@ void main() {
   });
 
   testWidgets(
-    'NewsPage switches layouts, removes card buttons, and opens reader',
+    'NewsPage switches layouts, removes card buttons, and opens article detail',
     (WidgetTester tester) async {
       final _FakeNewsRepository repository = _FakeNewsRepository(
         () async => _sampleArticles(),
       );
 
       await tester.pumpWidget(
-        _TestApp(
-          home: NewsPage(
-            repository: repository,
-            readerPageBuilder: (BuildContext context, Article article) {
-              return Scaffold(
-                body: Center(child: Text('Reader: ${article.title}')),
-              );
-            },
-          ),
-          wrapInScaffold: true,
-        ),
+        _TestApp(home: NewsPage(repository: repository), wrapInScaffold: true),
       );
       await tester.pumpAndSettle();
 
@@ -89,30 +80,89 @@ void main() {
       await tester.tap(leadStoryFinder, warnIfMissed: false);
       await tester.pumpAndSettle();
 
-      expect(find.text('Reader: Top headline'), findsOneWidget);
+      expect(find.text('Top headline'), findsWidgets);
+      expect(find.text('Lead story content'), findsOneWidget);
+      expect(
+        find.byKey(const Key('article-reader-inline-message')),
+        findsNothing,
+      );
     },
   );
 
-  testWidgets('ArticleReaderPage shows retry and browser fallback on error', (
+  testWidgets('NewsPage shows placeholder image when article has no image', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      _TestApp(
+        home: NewsPage(
+          repository: _FakeNewsRepository(() async => _sampleArticles()),
+        ),
+        wrapInScaffold: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('story-fallback-image-asset')), findsWidgets);
+  });
+
+  testWidgets('ArticleReaderPage shows placeholder image on broken image url', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
       _TestApp(
         home: ArticleReaderPage(
-          article: _sampleArticles().first,
-          initialReaderError: Exception('Embedded reader failed'),
+          article: Article(
+            title: 'Broken image story',
+            description: 'Story summary',
+            content: 'Story content',
+            url: 'https://example.com/story',
+            publishedAt: DateTime.parse('2026-03-17T12:00:00Z'),
+            source: 'ESPN',
+            urlToImage: 'https://broken.example.com/image.png',
+          ),
         ),
       ),
     );
+    await tester.pumpAndSettle();
 
     expect(
-      find.byKey(const Key('article-reader-inline-message')),
+      find.byKey(const Key('article-fallback-image-asset')),
       findsOneWidget,
     );
-    expect(find.text('Could not load the article'), findsOneWidget);
-    expect(find.text('Retry'), findsOneWidget);
-    expect(find.text('Open in Browser'), findsOneWidget);
   });
+
+  testWidgets(
+    'ArticleReaderPage shows content note when full text is missing',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        _TestApp(
+          home: ArticleReaderPage(
+            article: Article(
+              title: 'No content story',
+              description: 'Available summary only',
+              url: 'https://example.com/story',
+              publishedAt: DateTime.parse('2026-03-17T12:00:00Z'),
+              source: 'ESPN',
+              urlToImage: null,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('article-content-note')), findsOneWidget);
+      expect(
+        find.text(
+          'Full article text is not available from this news feed payload.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('article-reader-inline-message')),
+        findsNothing,
+      );
+    },
+  );
 
   testWidgets('HomePage top chrome hides on scroll down and returns on up', (
     WidgetTester tester,
@@ -162,40 +212,128 @@ void main() {
     );
   });
 
-  testWidgets('ScorePage switches between today and recent windows', (
+  testWidgets('ScorePage defaults to upcoming games and switches to previous', (
     WidgetTester tester,
   ) async {
     final _FakeBasketballRepository repository = _FakeBasketballRepository(
-      todayGames: <Game>[
+      upcomingGames: <Game>[
         _game(
-          id: 1,
+          id: 11,
+          date: '2026-03-19T01:00:00Z',
           home: _team(14, 'LAL', 'Los Angeles Lakers', 'West'),
           visitor: _team(2, 'BOS', 'Boston Celtics', 'East'),
+          status: '7:30 PM ET',
+          homeTeamScore: 0,
+          visitorTeamScore: 0,
         ),
       ],
-      recentGames: <Game>[
+      previousGames: <Game>[
         _game(
-          id: 2,
+          id: 12,
+          date: '2026-03-16T00:00:00Z',
           home: _team(5, 'NYK', 'New York Knicks', 'East'),
           visitor: _team(22, 'MIA', 'Miami Heat', 'East'),
-          status: '7:30 PM ET',
         ),
       ],
       dashboard: _dashboard(),
     );
 
     await tester.pumpWidget(
-      _TestApp(home: ScorePage(repository: repository), wrapInScaffold: true),
+      _TestApp(
+        home: ScorePage(
+          repository: repository,
+          contentRepository: _fakeScoreboardContentRepository(),
+        ),
+        wrapInScaffold: true,
+      ),
     );
     await tester.pumpAndSettle();
 
     expect(find.text('Los Angeles Lakers'), findsOneWidget);
 
-    await tester.tap(find.text('Recent'));
+    await tester.tap(find.text('Previous'));
     await tester.pumpAndSettle();
 
     expect(find.text('New York Knicks'), findsOneWidget);
     expect(find.text('Los Angeles Lakers'), findsNothing);
+  });
+
+  testWidgets('ScorePage opens enriched game detail page from a score card', (
+    WidgetTester tester,
+  ) async {
+    final _FakeBasketballRepository repository = _FakeBasketballRepository(
+      upcomingGames: <Game>[
+        _game(
+          id: 11,
+          date: '2026-03-19T01:00:00Z',
+          home: _team(10, 'GSW', 'Golden State Warriors', 'West'),
+          visitor: _team(25, 'OKC', 'Oklahoma City Thunder', 'West'),
+          status: '3rd Qtr',
+          homeTeamScore: 103,
+          visitorTeamScore: 109,
+        ),
+      ],
+      previousGames: <Game>[],
+      dashboard: _dashboard(),
+    );
+
+    await tester.pumpWidget(
+      _TestApp(
+        home: ScorePage(
+          repository: repository,
+          contentRepository: _fakeScoreboardContentRepository(),
+        ),
+        wrapInScaffold: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey<String>('score-card-11')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Game Detail'), findsOneWidget);
+    expect(find.text('Chase Center'), findsOneWidget);
+    expect(find.text('Line Score'), findsOneWidget);
+    expect(find.text('Matchup Summary'), findsOneWidget);
+  });
+
+  testWidgets('Game detail page still renders core info without enrichment', (
+    WidgetTester tester,
+  ) async {
+    final _FakeBasketballRepository repository = _FakeBasketballRepository(
+      upcomingGames: <Game>[
+        _game(
+          id: 12,
+          date: '2026-03-19T01:00:00Z',
+          home: _team(14, 'LAL', 'Los Angeles Lakers', 'West'),
+          visitor: _team(2, 'BOS', 'Boston Celtics', 'East'),
+          status: '7:30 PM ET',
+          homeTeamScore: 0,
+          visitorTeamScore: 0,
+        ),
+      ],
+      previousGames: <Game>[],
+      dashboard: _dashboard(),
+    );
+
+    await tester.pumpWidget(
+      _TestApp(
+        home: ScorePage(
+          repository: repository,
+          contentRepository: _fakeScoreboardContentRepository(),
+        ),
+        wrapInScaffold: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey<String>('score-card-12')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Game Detail'), findsOneWidget);
+    expect(find.text('Los Angeles Lakers'), findsOneWidget);
+    expect(find.text('Boston Celtics'), findsOneWidget);
+    expect(find.text('Matchup Summary'), findsNothing);
   });
 
   testWidgets('StatsPage switches from teams to players section', (
@@ -261,7 +399,13 @@ void main() {
     );
 
     await tester.pumpWidget(
-      _TestApp(home: ScorePage(repository: repository), wrapInScaffold: true),
+      _TestApp(
+        home: ScorePage(
+          repository: repository,
+          contentRepository: _fakeScoreboardContentRepository(),
+        ),
+        wrapInScaffold: true,
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -269,7 +413,7 @@ void main() {
       find.textContaining('Showing bundled demo scoreboard data'),
       findsOneWidget,
     );
-    expect(find.text('Los Angeles Lakers'), findsOneWidget);
+    expect(find.text('Golden State Warriors'), findsOneWidget);
     expect(find.text('Scoreboard unavailable'), findsNothing);
   });
 }
@@ -313,20 +457,27 @@ class _WidgetFakeProvider implements NewsProvider {
 
 class _FakeBasketballRepository implements BasketballDataRepository {
   _FakeBasketballRepository({
-    required this.todayGames,
-    required this.recentGames,
+    required this.upcomingGames,
+    required this.previousGames,
     required this.dashboard,
   });
 
-  final List<Game> todayGames;
-  final List<Game> recentGames;
+  final List<Game> upcomingGames;
+  final List<Game> previousGames;
   final StatsDashboard dashboard;
 
   @override
-  Future<List<Game>> fetchGamesForDate(DateTime date) async => todayGames;
+  Future<List<Game>> fetchGamesForDate(DateTime date) async => previousGames;
 
   @override
-  Future<List<Game>> fetchRecentGames({int days = 4}) async => recentGames;
+  Future<List<Game>> fetchRecentGames({int days = 4}) async => previousGames;
+
+  @override
+  Future<List<Game>> fetchUpcomingGames({int days = 7}) async => upcomingGames;
+
+  @override
+  Future<List<Game>> fetchPreviousGames({int days = 14}) async =>
+      previousGames;
 
   @override
   Future<StatsDashboard> fetchStatsDashboard({required int season}) async =>
@@ -435,12 +586,15 @@ Game _game({
   required Team home,
   required Team visitor,
   String status = 'Final',
+  String date = '2026-03-17T12:00:00Z',
+  int homeTeamScore = 120,
+  int visitorTeamScore = 115,
 }) {
   return Game(
     id: id,
-    date: '2026-03-17T12:00:00Z',
-    homeTeamScore: 120,
-    visitorTeamScore: 115,
+    date: date,
+    homeTeamScore: homeTeamScore,
+    visitorTeamScore: visitorTeamScore,
     season: 2025,
     period: 4,
     status: status,
@@ -593,7 +747,7 @@ const String _fallbackGamesJson = '''
     "time": "7:30 PM ET",
     "postseason": false,
     "postponed": false,
-    "fallback_day_offset": 0,
+    "fallback_relative_day_offset": 0,
     "home_team": {
       "id": 14,
       "abbreviation": "LAL",
@@ -624,7 +778,7 @@ const String _fallbackGamesJson = '''
     "time": "9:00 PM ET",
     "postseason": false,
     "postponed": false,
-    "fallback_day_offset": 0,
+    "fallback_relative_day_offset": 0,
     "home_team": {
       "id": 10,
       "abbreviation": "GSW",
@@ -645,4 +799,49 @@ const String _fallbackGamesJson = '''
     }
   }
 ]
+''';
+
+ScoreboardContentRepository _fakeScoreboardContentRepository() {
+  return ScoreboardContentRepository(
+    fixtureLoader: AssetFixtureLoader(
+      loadString: (String path) async {
+        switch (path) {
+          case 'assets/data/team_branding.json':
+            return _teamBrandingJson;
+          case 'assets/data/game_details.json':
+            return _gameDetailsJson;
+          default:
+            throw ArgumentError('Unexpected asset path: $path');
+        }
+      },
+    ),
+  );
+}
+
+const String _teamBrandingJson = '''
+{
+  "BOS": {"logoAsset": "images/nba/BOS.png", "primaryColor": "#007A33"},
+  "GSW": {"logoAsset": "images/nba/GSW.png", "primaryColor": "#1D428A"},
+  "LAL": {"logoAsset": "images/nba/LAL.png", "primaryColor": "#552583"},
+  "MIA": {"logoAsset": "images/nba/MIA.png", "primaryColor": "#98002E"},
+  "NYK": {"logoAsset": "images/nba/NYK.png", "primaryColor": "#006BB6"},
+  "OKC": {"logoAsset": "images/nba/OKC.png", "primaryColor": "#007AC1"}
+}
+''';
+
+const String _gameDetailsJson = '''
+{
+  "11": {
+    "arena": "Chase Center",
+    "location": "San Francisco, California",
+    "headline": "Thunder pressure Golden State in a live matchup",
+    "summary": "Oklahoma City has pushed the pace and kept Golden State scrambling in transition, while the Warriors are still in range thanks to half-court shotmaking.",
+    "notes": [
+      "Thunder lead the transition scoring battle.",
+      "Warriors are living from deep late in the third."
+    ],
+    "homeLineScores": [31, 33, 39],
+    "visitorLineScores": [35, 36, 38]
+  }
+}
 ''';

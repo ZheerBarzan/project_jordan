@@ -14,6 +14,10 @@ abstract class BasketballDataRepository {
 
   Future<List<Game>> fetchRecentGames({int days});
 
+  Future<List<Game>> fetchUpcomingGames({int days});
+
+  Future<List<Game>> fetchPreviousGames({int days});
+
   Future<StatsDashboard> fetchStatsDashboard({required int season});
 }
 
@@ -59,6 +63,38 @@ class BasketballRepository
 
   @override
   Future<List<Game>> fetchRecentGames({int days = 4}) async {
+    return fetchPreviousGames(days: days);
+  }
+
+  @override
+  Future<List<Game>> fetchUpcomingGames({int days = 7}) async {
+    _isUsingFallbackData.value = false;
+
+    final DateTime today = DateTime.now();
+    final DateTime endDate = today.add(Duration(days: days - 1));
+
+    try {
+      final List<Game> games = await _service.fetchGames(
+        startDate: today,
+        endDate: endDate,
+      );
+      return _sortUpcomingGames(
+        games.where(_isUpcomingWindowGame).toList(),
+      );
+    } catch (_) {
+      final List<Game> fallbackGames = await _loadFallbackGamesForWindow(
+        startOffset: 0,
+        endOffset: days - 1,
+      );
+      _isUsingFallbackData.value = true;
+      return _sortUpcomingGames(
+        fallbackGames.where(_isUpcomingWindowGame).toList(),
+      );
+    }
+  }
+
+  @override
+  Future<List<Game>> fetchPreviousGames({int days = 14}) async {
     _isUsingFallbackData.value = false;
 
     final DateTime today = DateTime.now();
@@ -69,13 +105,18 @@ class BasketballRepository
         startDate: startDate,
         endDate: today,
       );
-      return _sortGames(games);
+      return _sortPreviousGames(
+        games.where(_isPreviousWindowGame).toList(),
+      );
     } catch (_) {
-      final List<Game> fallbackGames = await _loadRecentFallbackGames(
-        days: days,
+      final List<Game> fallbackGames = await _loadFallbackGamesForWindow(
+        startOffset: -(days - 1),
+        endOffset: 0,
       );
       _isUsingFallbackData.value = true;
-      return _sortGames(fallbackGames);
+      return _sortPreviousGames(
+        fallbackGames.where(_isPreviousWindowGame).toList(),
+      );
     }
   }
 
@@ -151,6 +192,37 @@ class BasketballRepository
     return sorted;
   }
 
+  List<Game> _sortUpcomingGames(List<Game> games) {
+    final List<Game> sorted = List<Game>.from(games);
+    sorted.sort((Game a, Game b) {
+      final int byDate = a.parsedDate.compareTo(b.parsedDate);
+      if (byDate != 0) {
+        return byDate;
+      }
+
+      final int byPriority = _priorityForGame(a).compareTo(_priorityForGame(b));
+      if (byPriority != 0) {
+        return byPriority;
+      }
+
+      return a.homeTeam.fullName.compareTo(b.homeTeam.fullName);
+    });
+    return sorted;
+  }
+
+  List<Game> _sortPreviousGames(List<Game> games) {
+    final List<Game> sorted = List<Game>.from(games);
+    sorted.sort((Game a, Game b) {
+      final int byDate = b.parsedDate.compareTo(a.parsedDate);
+      if (byDate != 0) {
+        return byDate;
+      }
+
+      return a.homeTeam.fullName.compareTo(b.homeTeam.fullName);
+    });
+    return sorted;
+  }
+
   int _priorityForGame(Game game) {
     if (game.isLive) {
       return 0;
@@ -193,17 +265,25 @@ class BasketballRepository
         .toList();
   }
 
-  Future<List<Game>> _loadRecentFallbackGames({required int days}) async {
+  Future<List<Game>> _loadFallbackGamesForWindow({
+    required int startOffset,
+    required int endOffset,
+  }) async {
     final List<Map<String, dynamic>> fixtures = await _fixtureLoader
         .loadJsonList(_fallbackAssetPath);
     final DateTime today = _normalizedDate(DateTime.now());
 
-    return fixtures.map((Map<String, dynamic> json) {
-      final int offset = (json['fallback_day_offset'] as num?)?.toInt() ?? 0;
-      final int clampedOffset = offset.clamp(0, days - 1);
-      final DateTime targetDate = today.subtract(Duration(days: clampedOffset));
-      return _gameFromFixture(json, targetDate: targetDate);
-    }).toList();
+    return fixtures
+        .where((Map<String, dynamic> json) {
+          final int offset = _relativeDayOffsetForFixture(json);
+          return offset >= startOffset && offset <= endOffset;
+        })
+        .map((Map<String, dynamic> json) {
+          final int offset = _relativeDayOffsetForFixture(json);
+          final DateTime targetDate = today.add(Duration(days: offset));
+          return _gameFromFixture(json, targetDate: targetDate);
+        })
+        .toList();
   }
 
   Game _gameFromFixture(
@@ -252,4 +332,26 @@ class BasketballRepository
 
   DateTime _normalizedDate(DateTime date) =>
       DateTime(date.year, date.month, date.day);
+
+  int _relativeDayOffsetForFixture(Map<String, dynamic> json) {
+    final num? rawRelativeOffset = json['fallback_relative_day_offset'] as num?;
+    if (rawRelativeOffset != null) {
+      return rawRelativeOffset.toInt();
+    }
+
+    final num? legacyPastOffset = json['fallback_day_offset'] as num?;
+    if (legacyPastOffset != null) {
+      return -legacyPastOffset.toInt();
+    }
+
+    return 0;
+  }
+
+  bool _isUpcomingWindowGame(Game game) {
+    return !game.isFinal;
+  }
+
+  bool _isPreviousWindowGame(Game game) {
+    return game.isFinal || game.postponed;
+  }
 }
