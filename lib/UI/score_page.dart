@@ -48,10 +48,12 @@ class _ScorePageState extends State<ScorePage> {
 
   Future<_ScorePageData> _loadData() async {
     final List<Game> games = await _loadGamesForSegment();
-    final Map<String, TeamBranding> brandingByAbbreviation =
-        await widget.contentRepository.loadTeamBranding();
-    final Map<int, Map<String, dynamic>> enrichmentByGameId =
-        await widget.contentRepository.loadGameDetailEnrichment();
+    final Map<String, TeamBranding> brandingByAbbreviation = await widget
+        .contentRepository
+        .loadTeamBranding();
+    final Map<int, Map<String, dynamic>> enrichmentByGameId = await widget
+        .contentRepository
+        .loadGameDetailEnrichment();
 
     return _ScorePageData(
       games: games,
@@ -205,7 +207,9 @@ class _ScorePageState extends State<ScorePage> {
         ],
         _SegmentOverview(segment: _segment, totalGames: data.games.length),
         const SizedBox(height: 16),
-        ...groupedGames.entries.map((MapEntry<DateTime, List<GameDetail>> entry) {
+        ...groupedGames.entries.map((
+          MapEntry<DateTime, List<GameDetail>> entry,
+        ) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 20),
             child: Column(
@@ -222,10 +226,18 @@ class _ScorePageState extends State<ScorePage> {
                     child: _GameCard(
                       key: ValueKey<int>(detail.game.id),
                       detail: detail,
-                      homeBranding: data.brandingByAbbreviation[
-                          detail.game.homeTeam.abbreviation.toUpperCase()],
-                      visitorBranding: data.brandingByAbbreviation[
-                          detail.game.visitorTeam.abbreviation.toUpperCase()],
+                      homeBranding:
+                          data.brandingByAbbreviation[detail
+                              .game
+                              .homeTeam
+                              .abbreviation
+                              .toUpperCase()],
+                      visitorBranding:
+                          data.brandingByAbbreviation[detail
+                              .game
+                              .visitorTeam
+                              .abbreviation
+                              .toUpperCase()],
                       onTap: () => _openGameDetail(context, data, detail),
                     ),
                   ),
@@ -269,10 +281,12 @@ class _ScorePageState extends State<ScorePage> {
       MaterialPageRoute<void>(
         builder: (BuildContext context) => GameDetailPage(
           detail: detail,
-          homeBranding: data.brandingByAbbreviation[
-              detail.game.homeTeam.abbreviation.toUpperCase()],
-          visitorBranding: data.brandingByAbbreviation[
-              detail.game.visitorTeam.abbreviation.toUpperCase()],
+          homeBranding:
+              data.brandingByAbbreviation[detail.game.homeTeam.abbreviation
+                  .toUpperCase()],
+          visitorBranding:
+              data.brandingByAbbreviation[detail.game.visitorTeam.abbreviation
+                  .toUpperCase()],
         ),
       ),
     );
@@ -280,8 +294,11 @@ class _ScorePageState extends State<ScorePage> {
 
   String _sectionLabel(DateTime date) {
     final DateTime today = DateTime.now();
-    final DateTime normalizedToday =
-        DateTime(today.year, today.month, today.day);
+    final DateTime normalizedToday = DateTime(
+      today.year,
+      today.month,
+      today.day,
+    );
     final DateTime normalizedDate = DateTime(date.year, date.month, date.day);
     final int difference = normalizedDate.difference(normalizedToday).inDays;
 
@@ -386,22 +403,22 @@ class _SegmentSelector extends StatelessWidget {
         onSelectionChanged(selection.first);
       },
       style: ButtonStyle(
-        backgroundColor: WidgetStateProperty.resolveWith<Color?>(
-          (Set<WidgetState> states) {
-            if (states.contains(WidgetState.selected)) {
-              return AppTheme.accentRed;
-            }
+        backgroundColor: WidgetStateProperty.resolveWith<Color?>((
+          Set<WidgetState> states,
+        ) {
+          if (states.contains(WidgetState.selected)) {
+            return AppTheme.accentRed;
+          }
+          return Colors.white;
+        }),
+        foregroundColor: WidgetStateProperty.resolveWith<Color?>((
+          Set<WidgetState> states,
+        ) {
+          if (states.contains(WidgetState.selected)) {
             return Colors.white;
-          },
-        ),
-        foregroundColor: WidgetStateProperty.resolveWith<Color?>(
-          (Set<WidgetState> states) {
-            if (states.contains(WidgetState.selected)) {
-              return Colors.white;
-            }
-            return AppTheme.courtBlue;
-          },
-        ),
+          }
+          return AppTheme.courtBlue;
+        }),
         padding: const WidgetStatePropertyAll<EdgeInsets>(
           EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         ),
@@ -411,10 +428,7 @@ class _SegmentSelector extends StatelessWidget {
 }
 
 class _SegmentOverview extends StatelessWidget {
-  const _SegmentOverview({
-    required this.segment,
-    required this.totalGames,
-  });
+  const _SegmentOverview({required this.segment, required this.totalGames});
 
   final _ScoreboardSegment segment;
   final int totalGames;
@@ -463,9 +477,9 @@ class _SegmentOverview extends StatelessWidget {
             ),
             Text(
               '$totalGames games',
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: AppTheme.accentRed,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.labelLarge?.copyWith(color: AppTheme.accentRed),
             ),
           ],
         ),
@@ -490,9 +504,14 @@ class _GameCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color visitorColor =
-        _brandColor(visitorBranding, fallback: AppTheme.nbaBlue);
-    final Color homeColor = _brandColor(homeBranding, fallback: AppTheme.courtBlue);
+    final Color visitorColor = _brandColor(
+      visitorBranding,
+      fallback: AppTheme.nbaBlue,
+    );
+    final Color homeColor = _brandColor(
+      homeBranding,
+      fallback: AppTheme.courtBlue,
+    );
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -520,7 +539,9 @@ class _GameCard extends StatelessWidget {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          DateFormat('EEE • h:mm a').format(detail.game.parsedDate),
+                          DateFormat(
+                            'EEE • h:mm a',
+                          ).format(detail.game.parsedDate),
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ),
@@ -543,9 +564,13 @@ class _GameCard extends StatelessWidget {
                     teamName: detail.game.visitorTeam.fullName,
                     abbreviation: detail.game.visitorTeam.abbreviation,
                     branding: visitorBranding,
-                    score: detail.game.isScheduled ? null : detail.game.visitorTeamScore,
-                    emphasize: !detail.game.isScheduled &&
-                        detail.game.visitorTeamScore > detail.game.homeTeamScore,
+                    score: detail.game.isScheduled
+                        ? null
+                        : detail.game.visitorTeamScore,
+                    emphasize:
+                        !detail.game.isScheduled &&
+                        detail.game.visitorTeamScore >
+                            detail.game.homeTeamScore,
                     roleLabel: 'AWAY',
                   ),
                   const SizedBox(height: 14),
@@ -553,9 +578,13 @@ class _GameCard extends StatelessWidget {
                     teamName: detail.game.homeTeam.fullName,
                     abbreviation: detail.game.homeTeam.abbreviation,
                     branding: homeBranding,
-                    score: detail.game.isScheduled ? null : detail.game.homeTeamScore,
-                    emphasize: !detail.game.isScheduled &&
-                        detail.game.homeTeamScore >= detail.game.visitorTeamScore,
+                    score: detail.game.isScheduled
+                        ? null
+                        : detail.game.homeTeamScore,
+                    emphasize:
+                        !detail.game.isScheduled &&
+                        detail.game.homeTeamScore >=
+                            detail.game.visitorTeamScore,
                     roleLabel: 'HOME',
                   ),
                   const SizedBox(height: 18),
@@ -568,7 +597,9 @@ class _GameCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        detail.game.postseason ? 'POSTSEASON' : 'Season ${detail.game.season}',
+                        detail.game.postseason
+                            ? 'POSTSEASON'
+                            : 'Season ${detail.game.season}',
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
                           color: AppTheme.accentRed,
                         ),
@@ -598,8 +629,8 @@ class _GameCard extends StatelessWidget {
     final String suffix = detail.hasVenue
         ? detail.arena!
         : detail.hasLocation
-            ? detail.location!
-            : detail.game.homeTeam.city;
+        ? detail.location!
+        : detail.game.homeTeam.city;
     return '$prefix • $suffix';
   }
 
@@ -655,24 +686,26 @@ class _TeamRow extends StatelessWidget {
         ),
         score == null
             ? Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
                   roleLabel,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: accent,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelLarge?.copyWith(color: accent),
                 ),
               )
             : Text(
                 '$score',
-                style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  fontSize: 42,
-                  color: accent,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.displaySmall?.copyWith(fontSize: 42, color: accent),
               ),
       ],
     );
@@ -791,9 +824,9 @@ class _FallbackBanner extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.orange.shade900,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.orange.shade900),
             ),
           ),
         ],

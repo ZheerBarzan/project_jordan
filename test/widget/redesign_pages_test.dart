@@ -288,7 +288,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey<String>('score-card-11')));
+    final Finder enrichedCard = find.byKey(
+      const ValueKey<String>('score-card-11'),
+    );
+    await tester.ensureVisible(enrichedCard);
+    tester.widget<InkWell>(enrichedCard).onTap!();
     await tester.pumpAndSettle();
 
     expect(find.text('Game Detail'), findsOneWidget);
@@ -327,7 +331,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey<String>('score-card-12')));
+    final Finder baseCard = find.byKey(const ValueKey<String>('score-card-12'));
+    await tester.ensureVisible(baseCard);
+    tester.widget<InkWell>(baseCard).onTap!();
     await tester.pumpAndSettle();
 
     expect(find.text('Game Detail'), findsOneWidget);
@@ -340,8 +346,8 @@ void main() {
     WidgetTester tester,
   ) async {
     final _FakeBasketballRepository repository = _FakeBasketballRepository(
-      todayGames: <Game>[],
-      recentGames: <Game>[],
+      upcomingGames: <Game>[],
+      previousGames: <Game>[],
       dashboard: _dashboard(),
     );
 
@@ -476,8 +482,7 @@ class _FakeBasketballRepository implements BasketballDataRepository {
   Future<List<Game>> fetchUpcomingGames({int days = 7}) async => upcomingGames;
 
   @override
-  Future<List<Game>> fetchPreviousGames({int days = 14}) async =>
-      previousGames;
+  Future<List<Game>> fetchPreviousGames({int days = 14}) async => previousGames;
 
   @override
   Future<StatsDashboard> fetchStatsDashboard({required int season}) async =>

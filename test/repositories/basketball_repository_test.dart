@@ -24,7 +24,7 @@ void main() {
   });
 
   test(
-    'BasketballRepository falls back when live fetch returns an error',
+    'BasketballRepository exposes upcoming fallback games without finals',
     () async {
       final BasketballRepository repository = BasketballRepository(
         service: NbaApiService(
@@ -38,13 +38,35 @@ void main() {
         ),
       );
 
-      final games = await repository.fetchRecentGames(days: 4);
+      final games = await repository.fetchUpcomingGames(days: 7);
 
       expect(games, isNotEmpty);
       expect(repository.isUsingFallbackData.value, isTrue);
+      expect(games.any((game) => game.isFinal), isFalse);
       expect(
-        games.any((game) => game.homeTeam.fullName == 'Los Angeles Lakers'),
+        games.any((game) => game.homeTeam.fullName == 'Golden State Warriors'),
         isTrue,
+      );
+    },
+  );
+
+  test(
+    'BasketballRepository exposes previous fallback games without scheduled games',
+    () async {
+      final BasketballRepository repository = BasketballRepository(
+        service: NbaApiService(apiKey: ''),
+        fixtureLoader: AssetFixtureLoader(
+          loadString: (_) async => _fallbackGamesJson,
+        ),
+      );
+
+      final games = await repository.fetchPreviousGames(days: 14);
+
+      expect(games, isNotEmpty);
+      expect(games.every((game) => game.isFinal || game.postponed), isTrue);
+      expect(
+        games.any((game) => game.homeTeam.fullName == 'Denver Nuggets'),
+        isFalse,
       );
     },
   );
@@ -63,7 +85,7 @@ const String _fallbackGamesJson = '''
     "time": "7:30 PM ET",
     "postseason": false,
     "postponed": false,
-    "fallback_day_offset": 0,
+    "fallback_relative_day_offset": 0,
     "home_team": {
       "id": 14,
       "abbreviation": "LAL",
@@ -94,7 +116,7 @@ const String _fallbackGamesJson = '''
     "time": "9:00 PM ET",
     "postseason": false,
     "postponed": false,
-    "fallback_day_offset": 0,
+    "fallback_relative_day_offset": 0,
     "home_team": {
       "id": 10,
       "abbreviation": "GSW",
@@ -112,6 +134,68 @@ const String _fallbackGamesJson = '''
       "division": "Northwest",
       "full_name": "Oklahoma City Thunder",
       "name": "Thunder"
+    }
+  },
+  {
+    "id": 103,
+    "date": "2026-03-17T00:00:00Z",
+    "home_team_score": 121,
+    "visitor_team_score": 117,
+    "season": 2025,
+    "period": 4,
+    "status": "Final",
+    "time": "7:00 PM ET",
+    "postseason": false,
+    "postponed": false,
+    "fallback_relative_day_offset": -1,
+    "home_team": {
+      "id": 5,
+      "abbreviation": "NYK",
+      "city": "New York",
+      "conference": "East",
+      "division": "Atlantic",
+      "full_name": "New York Knicks",
+      "name": "Knicks"
+    },
+    "visitor_team": {
+      "id": 15,
+      "abbreviation": "MIA",
+      "city": "Miami",
+      "conference": "East",
+      "division": "Southeast",
+      "full_name": "Miami Heat",
+      "name": "Heat"
+    }
+  },
+  {
+    "id": 106,
+    "date": "2026-03-19T00:30:00Z",
+    "home_team_score": 0,
+    "visitor_team_score": 0,
+    "season": 2025,
+    "period": 0,
+    "status": "7:30 PM ET",
+    "time": "7:30 PM ET",
+    "postseason": false,
+    "postponed": false,
+    "fallback_relative_day_offset": 1,
+    "home_team": {
+      "id": 8,
+      "abbreviation": "DEN",
+      "city": "Denver",
+      "conference": "West",
+      "division": "Northwest",
+      "full_name": "Denver Nuggets",
+      "name": "Nuggets"
+    },
+    "visitor_team": {
+      "id": 6,
+      "abbreviation": "DAL",
+      "city": "Dallas",
+      "conference": "West",
+      "division": "Southwest",
+      "full_name": "Dallas Mavericks",
+      "name": "Mavericks"
     }
   }
 ]

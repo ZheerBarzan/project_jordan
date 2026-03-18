@@ -17,10 +17,11 @@ class ScoreboardContentRepository {
         .loadJsonObjectMap(_teamBrandingAssetPath);
 
     return json.map(
-      (String key, Map<String, dynamic> value) => MapEntry<String, TeamBranding>(
-        key.toUpperCase(),
-        TeamBranding.fromJson(key, value),
-      ),
+      (String key, Map<String, dynamic> value) =>
+          MapEntry<String, TeamBranding>(
+            key.toUpperCase(),
+            TeamBranding.fromJson(key, value),
+          ),
     );
   }
 
@@ -38,9 +39,6 @@ class ScoreboardContentRepository {
     Game game,
     Map<int, Map<String, dynamic>> enrichmentByGameId,
   ) {
-    return GameDetail.fromGame(
-      game,
-      enrichment: enrichmentByGameId[game.id],
-    );
+    return GameDetail.fromGame(game, enrichment: enrichmentByGameId[game.id]);
   }
 }

@@ -69,7 +69,9 @@ class GameDetailPage extends StatelessWidget {
                   if (detail.hasNotes) ...<Widget>[
                     const SizedBox(height: 18),
                     _SectionCard(
-                      title: detail.game.isScheduled ? 'Preview Notes' : 'Game Notes',
+                      title: detail.game.isScheduled
+                          ? 'Preview Notes'
+                          : 'Game Notes',
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: detail.notes
@@ -92,7 +94,9 @@ class GameDetailPage extends StatelessWidget {
                                     Expanded(
                                       child: Text(
                                         note,
-                                        style: Theme.of(context).textTheme.bodyLarge,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodyLarge,
                                       ),
                                     ),
                                   ],
@@ -126,12 +130,14 @@ class _HeroPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color left = _brandColor(visitorBranding, fallback: AppTheme.courtBlue);
+    final Color left = _brandColor(
+      visitorBranding,
+      fallback: AppTheme.courtBlue,
+    );
     final Color right = _brandColor(homeBranding, fallback: AppTheme.nbaBlue);
-    final String headline =
-        detail.headline?.trim().isNotEmpty == true
-            ? detail.headline!
-            : '${detail.game.visitorTeam.name} at ${detail.game.homeTeam.name}';
+    final String headline = detail.headline?.trim().isNotEmpty == true
+        ? detail.headline!
+        : '${detail.game.visitorTeam.name} at ${detail.game.homeTeam.name}';
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -192,8 +198,9 @@ class _HeroPanel extends StatelessWidget {
                           alignment: CrossAxisAlignment.center,
                           teamName: detail.game.homeTeam.fullName,
                           abbreviation: detail.game.homeTeam.abbreviation,
-                          score:
-                              detail.game.isScheduled ? null : detail.game.homeTeamScore,
+                          score: detail.game.isScheduled
+                              ? null
+                              : detail.game.homeTeamScore,
                           branding: homeBranding,
                         ),
                       ],
@@ -236,8 +243,9 @@ class _HeroPanel extends StatelessWidget {
   }
 
   String _heroSubtitle(GameDetail detail) {
-    final String formattedDate = DateFormat('EEEE, MMM d • h:mm a')
-        .format(detail.game.parsedDate);
+    final String formattedDate = DateFormat(
+      'EEEE, MMM d • h:mm a',
+    ).format(detail.game.parsedDate);
     final String status = switch (true) {
       _ when detail.game.postponed => 'Postponed',
       _ when detail.game.isLive => 'Live • ${detail.game.status}',
@@ -287,12 +295,11 @@ class _HeroTeam extends StatelessWidget {
           textAlign: alignment == CrossAxisAlignment.center
               ? TextAlign.center
               : alignment == CrossAxisAlignment.end
-                  ? TextAlign.end
-                  : TextAlign.start,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: Colors.white,
-            fontSize: 28,
-          ),
+              ? TextAlign.end
+              : TextAlign.start,
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(color: Colors.white, fontSize: 28),
         ),
         const SizedBox(height: 4),
         Text(
@@ -305,10 +312,9 @@ class _HeroTeam extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           score == null ? 'VS' : '$score',
-          style: Theme.of(context).textTheme.displaySmall?.copyWith(
-            color: Colors.white,
-            fontSize: 52,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.displaySmall?.copyWith(color: Colors.white, fontSize: 52),
         ),
       ],
     );
@@ -351,10 +357,9 @@ class _CenterStatus extends StatelessWidget {
         children: <Widget>[
           Text(
             label,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Colors.white,
-              fontSize: 15,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelLarge?.copyWith(color: Colors.white, fontSize: 15),
           ),
           const SizedBox(height: 8),
           Text(
@@ -396,10 +401,7 @@ class _InfoStrip extends StatelessWidget {
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(color: AppTheme.paperLine),
               ),
-              child: Text(
-                label,
-                style: Theme.of(context).textTheme.labelLarge,
-              ),
+              child: Text(label, style: Theme.of(context).textTheme.labelLarge),
             ),
           )
           .toList(),
@@ -444,7 +446,8 @@ class _LineScoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final int quarterCount = detail.homeLineScores.length > detail.visitorLineScores.length
+    final int quarterCount =
+        detail.homeLineScores.length > detail.visitorLineScores.length
         ? detail.homeLineScores.length
         : detail.visitorLineScores.length;
 
@@ -549,9 +552,9 @@ class _LineScoreCard extends StatelessWidget {
           child: Text(
             '$total',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: AppTheme.accentRed,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(color: AppTheme.accentRed),
           ),
         ),
       ],

@@ -36,10 +36,12 @@ class TeamLogoBadge extends StatelessWidget {
           ? Image.asset(
               branding!.logoAsset!,
               fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => _FallbackMonogram(
-                abbreviation: abbreviation,
-                color: _brandColor,
-              ),
+              errorBuilder:
+                  (BuildContext _, Object error, StackTrace? stackTrace) =>
+                      _FallbackMonogram(
+                        abbreviation: abbreviation,
+                        color: _brandColor,
+                      ),
             )
           : _FallbackMonogram(abbreviation: abbreviation, color: _brandColor),
     );
@@ -66,10 +68,9 @@ class _FallbackMonogram extends StatelessWidget {
       child: Text(
         abbreviation,
         textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          color: color,
-          fontSize: 18,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(color: color, fontSize: 18),
       ),
     );
   }

@@ -78,9 +78,7 @@ class BasketballRepository
         startDate: today,
         endDate: endDate,
       );
-      return _sortUpcomingGames(
-        games.where(_isUpcomingWindowGame).toList(),
-      );
+      return _sortUpcomingGames(games.where(_isUpcomingWindowGame).toList());
     } catch (_) {
       final List<Game> fallbackGames = await _loadFallbackGamesForWindow(
         startOffset: 0,
@@ -105,9 +103,7 @@ class BasketballRepository
         startDate: startDate,
         endDate: today,
       );
-      return _sortPreviousGames(
-        games.where(_isPreviousWindowGame).toList(),
-      );
+      return _sortPreviousGames(games.where(_isPreviousWindowGame).toList());
     } catch (_) {
       final List<Game> fallbackGames = await _loadFallbackGamesForWindow(
         startOffset: -(days - 1),

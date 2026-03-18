@@ -39,10 +39,7 @@ class GameDetail {
   bool get hasEnrichment =>
       hasVenue || hasLocation || hasSummary || hasNotes || hasLineScore;
 
-  factory GameDetail.fromGame(
-    Game game, {
-    Map<String, dynamic>? enrichment,
-  }) {
+  factory GameDetail.fromGame(Game game, {Map<String, dynamic>? enrichment}) {
     final Map<String, dynamic> json = enrichment ?? const <String, dynamic>{};
 
     return GameDetail(
@@ -55,9 +52,10 @@ class GameDetail {
           .map((dynamic entry) => entry.toString().trim())
           .where((String entry) => entry.isNotEmpty)
           .toList(),
-      homeLineScores: (json['homeLineScores'] as List<dynamic>? ?? const <dynamic>[])
-          .map((dynamic entry) => (entry as num).toInt())
-          .toList(),
+      homeLineScores:
+          (json['homeLineScores'] as List<dynamic>? ?? const <dynamic>[])
+              .map((dynamic entry) => (entry as num).toInt())
+              .toList(),
       visitorLineScores:
           (json['visitorLineScores'] as List<dynamic>? ?? const <dynamic>[])
               .map((dynamic entry) => (entry as num).toInt())
