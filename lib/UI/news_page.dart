@@ -7,7 +7,6 @@ import 'package:project_jordan/model/news_model.dart';
 import 'package:project_jordan/repositories/fallback_aware_repository.dart';
 import 'package:project_jordan/repositories/news_repository.dart';
 import 'package:project_jordan/theme/app_theme.dart';
-import 'package:transparent_image/transparent_image.dart';
 
 enum _NewsLayoutMode { list, grid }
 
@@ -108,8 +107,6 @@ class _NewsPageState extends State<NewsPage> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const _NewsHeader(),
-          const SizedBox(height: 18),
           _NewsToolbar(
             layoutMode: _layoutMode,
             onModeChanged: _setLayoutMode,
@@ -131,8 +128,6 @@ class _NewsPageState extends State<NewsPage> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const _NewsHeader(),
-          const SizedBox(height: 18),
           _NewsToolbar(
             layoutMode: _layoutMode,
             onModeChanged: _setLayoutMode,
@@ -155,8 +150,6 @@ class _NewsPageState extends State<NewsPage> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const _NewsHeader(),
-          const SizedBox(height: 18),
           _NewsToolbar(
             layoutMode: _layoutMode,
             onModeChanged: _setLayoutMode,
@@ -181,21 +174,12 @@ class _NewsPageState extends State<NewsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const _NewsHeader(),
-        const SizedBox(height: 18),
         _NewsToolbar(
           layoutMode: _layoutMode,
           onModeChanged: _setLayoutMode,
           isUsingFallbackData: isUsingFallbackData,
         ),
         const SizedBox(height: 18),
-        if (isUsingFallbackData) ...<Widget>[
-          const _FallbackBanner(
-            message:
-                'Showing bundled demo headlines because the live feeds are unavailable right now.',
-          ),
-          const SizedBox(height: 18),
-        ],
         _LeadStoryCard(
           article: leadStory,
           onTap: () => _openArticle(leadStory),
@@ -246,7 +230,9 @@ class _NewsPageState extends State<NewsPage> {
           );
         }
 
-        final double aspectRatio = constraints.maxWidth > 1040 ? 0.88 : 0.83;
+        final double aspectRatio = crossAxisCount == 1
+            ? 2.0
+            : (constraints.maxWidth > 1040 ? 1.18 : 1.02);
 
         return GridView.builder(
           key: const Key('news-grid'),
@@ -288,39 +274,6 @@ class _NewsPageState extends State<NewsPage> {
         builder: (BuildContext context) =>
             widget.readerPageBuilder?.call(context, article) ??
             ArticleReaderPage(article: article),
-      ),
-    );
-  }
-}
-
-class _NewsHeader extends StatelessWidget {
-  const _NewsHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: AppTheme.newsprint,
-      child: Padding(
-        padding: const EdgeInsets.all(22),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              'The Daily Wire',
-              style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                color: AppTheme.ink,
-                fontSize: 42,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'An editorial-style NBA briefing with live headlines, clean reading cards, and in-app article viewing.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(color: AppTheme.ink),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -371,39 +324,6 @@ class _NewsToolbar extends StatelessWidget {
   }
 }
 
-class _FallbackBanner extends StatelessWidget {
-  const _FallbackBanner({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppTheme.nbaBlue.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppTheme.nbaBlue.withValues(alpha: 0.18)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Icon(Icons.wifi_off_rounded, color: AppTheme.nbaBlue),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _LeadStoryCard extends StatelessWidget {
   const _LeadStoryCard({required this.article, required this.onTap});
 
@@ -418,50 +338,45 @@ class _LeadStoryCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(28),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(28),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                width: 52,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.accentRed,
+                  borderRadius: BorderRadius.circular(999),
+                ),
               ),
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: _StoryImage(imageUrl: article.urlToImage),
+              const SizedBox(height: 18),
+              _MetaRow(article: article),
+              const SizedBox(height: 14),
+              Text(
+                article.title,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  color: AppTheme.ink,
+                  fontSize: 34,
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(22),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  _MetaRow(article: article),
-                  const SizedBox(height: 14),
-                  Text(
-                    article.title,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                      color: AppTheme.ink,
-                      fontSize: 34,
-                    ),
+              if (article.description.trim().isNotEmpty) ...<Widget>[
+                const SizedBox(height: 12),
+                Text(
+                  article.description,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppTheme.ink.withValues(alpha: 0.82),
+                    height: 1.5,
                   ),
-                  if (article.description.trim().isNotEmpty) ...<Widget>[
-                    const SizedBox(height: 12),
-                    Text(
-                      article.description,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppTheme.ink.withValues(alpha: 0.82),
-                        height: 1.6,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -504,48 +419,36 @@ class _ListStoryCardBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          child: AspectRatio(
-            aspectRatio: 16 / 9,
-            child: _StoryImage(imageUrl: article.urlToImage),
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          _MetaRow(article: article),
+          const SizedBox(height: 10),
+          Text(
+            article.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              color: AppTheme.ink,
+              fontSize: 28,
+            ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              _MetaRow(article: article),
-              const SizedBox(height: 10),
-              Text(
-                article.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: AppTheme.ink,
-                  fontSize: 28,
-                ),
+          if (article.description.trim().isNotEmpty) ...<Widget>[
+            const SizedBox(height: 10),
+            Text(
+              article.description,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppTheme.ink.withValues(alpha: 0.76),
+                height: 1.5,
               ),
-              if (article.description.trim().isNotEmpty) ...<Widget>[
-                const SizedBox(height: 10),
-                Text(
-                  article.description,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.ink.withValues(alpha: 0.76),
-                    height: 1.55,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -557,97 +460,38 @@ class _CompactStoryCardBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          child: AspectRatio(
-            aspectRatio: 4 / 3,
-            child: _StoryImage(imageUrl: article.urlToImage),
-          ),
-        ),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                _MetaRow(article: article),
-                const SizedBox(height: 10),
-                Text(
-                  article.title,
-                  maxLines: 3,
+    return SizedBox.expand(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            _MetaRow(article: article),
+            const SizedBox(height: 10),
+            Text(
+              article.title,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: AppTheme.ink,
+                fontSize: 24,
+              ),
+            ),
+            if (article.description.trim().isNotEmpty) ...<Widget>[
+              const SizedBox(height: 10),
+              Expanded(
+                child: Text(
+                  article.description,
+                  maxLines: 4,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: AppTheme.ink,
-                    fontSize: 24,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppTheme.ink.withValues(alpha: 0.76),
+                    height: 1.45,
                   ),
                 ),
-                if (article.description.trim().isNotEmpty) ...<Widget>[
-                  const SizedBox(height: 10),
-                  Expanded(
-                    child: Text(
-                      article.description,
-                      maxLines: 4,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.ink.withValues(alpha: 0.76),
-                        height: 1.5,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _StoryImage extends StatelessWidget {
-  const _StoryImage({required this.imageUrl});
-
-  final String? imageUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final String image = imageUrl ?? '';
-    if (image.isEmpty) {
-      return const _StoryImageFallback();
-    }
-
-    return FadeInImage.memoryNetwork(
-      placeholder: kTransparentImage,
-      image: image,
-      fit: BoxFit.cover,
-      imageErrorBuilder: (_, _, _) => const _StoryImageFallback(),
-    );
-  }
-}
-
-class _StoryImageFallback extends StatelessWidget {
-  const _StoryImageFallback();
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      key: const Key('story-fallback-image'),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: <Color>[AppTheme.courtBlue, AppTheme.nbaBlue],
-        ),
-      ),
-      child: Center(
-        child: Image.asset(
-          'images/nba.png',
-          key: const Key('story-fallback-image-asset'),
-          width: 108,
-          fit: BoxFit.contain,
+              ),
+            ],
+          ],
         ),
       ),
     );
@@ -667,6 +511,7 @@ class _MetaRow extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       children: <Widget>[
         Container(
+          key: ValueKey<String>('news-meta-source-${article.dedupeKey}'),
           padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
           decoration: BoxDecoration(
             color: AppTheme.accentRed.withValues(alpha: 0.1),
@@ -681,6 +526,7 @@ class _MetaRow extends StatelessWidget {
         ),
         Text(
           DateFormat('MMM d • h:mm a').format(article.publishedAt.toLocal()),
+          key: ValueKey<String>('news-meta-timestamp-${article.dedupeKey}'),
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ],

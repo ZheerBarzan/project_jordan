@@ -29,12 +29,12 @@ class GameDetailPage extends StatelessWidget {
           'Game Detail',
           style: Theme.of(
             context,
-          ).textTheme.headlineMedium?.copyWith(fontSize: 26),
+          ).textTheme.headlineMedium?.copyWith(fontSize: 22),
         ),
       ),
       body: Scrollbar(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+          padding: const EdgeInsets.fromLTRB(14, 6, 14, 24),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1080),
@@ -46,20 +46,22 @@ class GameDetailPage extends StatelessWidget {
                     homeBranding: homeBranding,
                     visitorBranding: visitorBranding,
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 14),
                   _InfoStrip(detail: detail),
                   if (detail.hasSummary) ...<Widget>[
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 14),
                     _SectionCard(
                       title: 'Matchup Summary',
                       child: Text(
                         detail.summary!,
-                        style: Theme.of(context).textTheme.bodyLarge,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyLarge?.copyWith(fontSize: 15),
                       ),
                     ),
                   ],
                   if (detail.hasLineScore) ...<Widget>[
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 14),
                     _LineScoreCard(
                       detail: detail,
                       homeBranding: homeBranding,
@@ -67,7 +69,7 @@ class GameDetailPage extends StatelessWidget {
                     ),
                   ],
                   if (detail.hasNotes) ...<Widget>[
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 14),
                     _SectionCard(
                       title: detail.game.isScheduled
                           ? 'Preview Notes'
@@ -77,13 +79,13 @@ class GameDetailPage extends StatelessWidget {
                         children: detail.notes
                             .map(
                               (String note) => Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
+                                padding: const EdgeInsets.only(bottom: 8),
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
                                     Container(
-                                      width: 8,
-                                      height: 8,
+                                      width: 7,
+                                      height: 7,
                                       margin: const EdgeInsets.only(top: 6),
                                       decoration: const BoxDecoration(
                                         color: AppTheme.accentRed,
@@ -94,9 +96,10 @@ class GameDetailPage extends StatelessWidget {
                                     Expanded(
                                       child: Text(
                                         note,
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodyLarge,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge
+                                            ?.copyWith(fontSize: 15),
                                       ),
                                     ),
                                   ],
@@ -140,7 +143,7 @@ class _HeroPanel extends StatelessWidget {
         : '${detail.game.visitorTeam.name} at ${detail.game.homeTeam.name}';
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -167,17 +170,18 @@ class _HeroPanel extends StatelessWidget {
                 headline,
                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
                   color: Colors.white,
-                  fontSize: stacked ? 36 : 48,
+                  fontSize: stacked ? 29 : 38,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
                 _heroSubtitle(detail),
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Colors.white.withValues(alpha: 0.88),
+                  fontSize: 14,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 18),
               stacked
                   ? Column(
                       children: <Widget>[
@@ -191,7 +195,7 @@ class _HeroPanel extends StatelessWidget {
                           branding: visitorBranding,
                         ),
                         Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                           child: _CenterStatus(detail: detail, compact: true),
                         ),
                         _HeroTeam(
@@ -219,7 +223,7 @@ class _HeroPanel extends StatelessWidget {
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 18),
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
                           child: _CenterStatus(detail: detail),
                         ),
                         Expanded(
@@ -286,10 +290,10 @@ class _HeroTeam extends StatelessWidget {
           abbreviation: abbreviation,
           teamName: teamName,
           branding: branding,
-          size: 84,
-          borderRadius: 28,
+          size: 68,
+          borderRadius: 22,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         Text(
           teamName,
           textAlign: alignment == CrossAxisAlignment.center
@@ -299,22 +303,22 @@ class _HeroTeam extends StatelessWidget {
               : TextAlign.start,
           style: Theme.of(
             context,
-          ).textTheme.titleLarge?.copyWith(color: Colors.white, fontSize: 28),
+          ).textTheme.titleLarge?.copyWith(color: Colors.white, fontSize: 22),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2),
         Text(
           abbreviation,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: Colors.white.withValues(alpha: 0.76),
-            fontSize: 13,
+            fontSize: 11,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         Text(
           score == null ? 'VS' : '$score',
           style: Theme.of(
             context,
-          ).textTheme.displaySmall?.copyWith(color: Colors.white, fontSize: 52),
+          ).textTheme.displaySmall?.copyWith(color: Colors.white, fontSize: 40),
         ),
       ],
     );
@@ -345,12 +349,12 @@ class _CenterStatus extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: compact ? 18 : 20,
-        vertical: compact ? 14 : 16,
+        horizontal: compact ? 14 : 16,
+        vertical: compact ? 10 : 12,
       ),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
       ),
       child: Column(
@@ -359,13 +363,14 @@ class _CenterStatus extends StatelessWidget {
             label,
             style: Theme.of(
               context,
-            ).textTheme.labelLarge?.copyWith(color: Colors.white, fontSize: 15),
+            ).textTheme.labelLarge?.copyWith(color: Colors.white, fontSize: 13),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             supporting,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               color: Colors.white.withValues(alpha: 0.92),
+              fontSize: 14,
             ),
           ),
         ],
@@ -395,13 +400,18 @@ class _InfoStrip extends StatelessWidget {
       children: labels
           .map(
             (String label) => Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: AppTheme.paperLine),
               ),
-              child: Text(label, style: Theme.of(context).textTheme.labelLarge),
+              child: Text(
+                label,
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(fontSize: 12),
+              ),
             ),
           )
           .toList(),
@@ -419,12 +429,17 @@ class _SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(title, style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 14),
+            Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(fontSize: 24),
+            ),
+            const SizedBox(height: 10),
             child,
           ],
         ),
@@ -463,24 +478,28 @@ class _LineScoreCard extends StatelessWidget {
         children: <TableRow>[
           TableRow(
             children: <Widget>[
-              const SizedBox(height: 34),
+              const SizedBox(height: 28),
               ...List<Widget>.generate(
                 quarterCount,
                 (int index) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
                     'Q${index + 1}',
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.labelLarge,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelLarge?.copyWith(fontSize: 12),
                   ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.only(bottom: 8),
                 child: Text(
                   'T',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.labelLarge,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelLarge?.copyWith(fontSize: 12),
                 ),
               ),
             ],
@@ -517,21 +536,23 @@ class _LineScoreCard extends StatelessWidget {
     return TableRow(
       children: <Widget>[
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 10),
           child: Row(
             children: <Widget>[
               TeamLogoBadge(
                 abbreviation: abbreviation,
                 teamName: teamName,
                 branding: branding,
-                size: 38,
-                borderRadius: 14,
+                size: 32,
+                borderRadius: 12,
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   teamName,
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(fontSize: 18),
                 ),
               ),
             ],
@@ -539,22 +560,25 @@ class _LineScoreCard extends StatelessWidget {
         ),
         ...scores.map(
           (int score) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            padding: const EdgeInsets.symmetric(vertical: 10),
             child: Text(
               '$score',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(fontSize: 14),
             ),
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 10),
           child: Text(
             '$total',
             textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(color: AppTheme.accentRed),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: AppTheme.accentRed,
+              fontSize: 18,
+            ),
           ),
         ),
       ],

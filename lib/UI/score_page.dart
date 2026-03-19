@@ -10,7 +10,6 @@ import 'package:project_jordan/model/game_detail.dart';
 import 'package:project_jordan/model/game_model.dart';
 import 'package:project_jordan/model/team_branding.dart';
 import 'package:project_jordan/repositories/basketball_repository.dart';
-import 'package:project_jordan/repositories/fallback_aware_repository.dart';
 import 'package:project_jordan/repositories/scoreboard_content_repository.dart';
 import 'package:project_jordan/theme/app_theme.dart';
 
@@ -109,13 +108,11 @@ class _ScorePageState extends State<ScorePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        const _ScoreHeader(),
-                        const SizedBox(height: 18),
                         _SegmentSelector(
                           selectedSegment: _segment,
                           onSelectionChanged: _changeSegment,
                         ),
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 20),
                         _buildBody(context, snapshot),
                       ],
                     ),
@@ -150,12 +147,6 @@ class _ScorePageState extends State<ScorePage> {
     BuildContext context,
     AsyncSnapshot<_ScorePageData> snapshot,
   ) {
-    final bool isUsingFallbackData =
-        widget.repository is FallbackAwareRepository &&
-        (widget.repository as FallbackAwareRepository)
-            .isUsingFallbackData
-            .value;
-
     if (snapshot.connectionState == ConnectionState.waiting) {
       return _CenteredState(
         icon: Icons.sports_basketball_outlined,
@@ -198,15 +189,6 @@ class _ScorePageState extends State<ScorePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        if (isUsingFallbackData) ...<Widget>[
-          const _FallbackBanner(
-            message:
-                'Showing bundled demo scoreboard data because live NBA scores are unavailable right now.',
-          ),
-          const SizedBox(height: 16),
-        ],
-        _SegmentOverview(segment: _segment, totalGames: data.games.length),
-        const SizedBox(height: 16),
         ...groupedGames.entries.map((
           MapEntry<DateTime, List<GameDetail>> entry,
         ) {
@@ -334,45 +316,6 @@ extension on _ScoreboardSegment {
   };
 }
 
-class _ScoreHeader extends StatelessWidget {
-  const _ScoreHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: <Color>[AppTheme.nbaBlue, AppTheme.courtBlue],
-        ),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(22),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              'League Game Center',
-              style: Theme.of(
-                context,
-              ).textTheme.displaySmall?.copyWith(color: Colors.white),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Upcoming matchups, recent results, and richer game cards with team branding and deeper detail screens.',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Colors.white.withValues(alpha: 0.88),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _SegmentSelector extends StatelessWidget {
   const _SegmentSelector({
     required this.selectedSegment,
@@ -427,67 +370,6 @@ class _SegmentSelector extends StatelessWidget {
   }
 }
 
-class _SegmentOverview extends StatelessWidget {
-  const _SegmentOverview({required this.segment, required this.totalGames});
-
-  final _ScoreboardSegment segment;
-  final int totalGames;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          children: <Widget>[
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: AppTheme.nbaBlue.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Icon(
-                segment == _ScoreboardSegment.upcoming
-                    ? Icons.event_available_rounded
-                    : Icons.scoreboard_outlined,
-                color: AppTheme.nbaBlue,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    segment == _ScoreboardSegment.upcoming
-                        ? 'Next 7 days'
-                        : 'Last 14 days',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    segment == _ScoreboardSegment.upcoming
-                        ? 'Live games and scheduled matchups ordered to keep the next slate readable.'
-                        : 'Completed results, finals, and recent status changes grouped by date.',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-            ),
-            Text(
-              '$totalGames games',
-              style: Theme.of(
-                context,
-              ).textTheme.labelLarge?.copyWith(color: AppTheme.accentRed),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _GameCard extends StatelessWidget {
   const _GameCard({
     super.key,
@@ -529,37 +411,41 @@ class _GameCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.all(14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Row(
                     children: <Widget>[
                       _StatusBadge(detail: detail),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           DateFormat(
                             'EEE • h:mm a',
                           ).format(detail.game.parsedDate),
-                          style: Theme.of(context).textTheme.bodySmall,
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodySmall?.copyWith(fontSize: 11),
                         ),
                       ),
                       const Icon(
                         Icons.arrow_forward_ios_rounded,
-                        size: 16,
+                        size: 14,
                         color: AppTheme.courtBlue,
                       ),
                     ],
                   ),
                   if ((detail.headline ?? '').trim().isNotEmpty) ...<Widget>[
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 10),
                     Text(
                       detail.headline!,
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleMedium?.copyWith(fontSize: 19),
                     ),
                   ],
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 14),
                   _TeamRow(
                     teamName: detail.game.visitorTeam.fullName,
                     abbreviation: detail.game.visitorTeam.abbreviation,
@@ -573,7 +459,7 @@ class _GameCard extends StatelessWidget {
                             detail.game.homeTeamScore,
                     roleLabel: 'AWAY',
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 10),
                   _TeamRow(
                     teamName: detail.game.homeTeam.fullName,
                     abbreviation: detail.game.homeTeam.abbreviation,
@@ -587,13 +473,15 @@ class _GameCard extends StatelessWidget {
                             detail.game.visitorTeamScore,
                     roleLabel: 'HOME',
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 14),
                   Row(
                     children: <Widget>[
                       Expanded(
                         child: Text(
                           _footerText(detail),
-                          style: Theme.of(context).textTheme.bodyMedium,
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.copyWith(fontSize: 13),
                         ),
                       ),
                       Text(
@@ -602,6 +490,7 @@ class _GameCard extends StatelessWidget {
                             : 'Season ${detail.game.season}',
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
                           color: AppTheme.accentRed,
+                          fontSize: 12,
                         ),
                       ),
                     ],
@@ -667,45 +556,49 @@ class _TeamRow extends StatelessWidget {
           abbreviation: abbreviation,
           teamName: teamName,
           branding: branding,
-          size: 60,
-          borderRadius: 22,
+          size: 50,
+          borderRadius: 18,
         ),
-        const SizedBox(width: 14),
+        const SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text(teamName, style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 3),
+              Text(
+                teamName,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontSize: 22),
+              ),
+              const SizedBox(height: 2),
               Text(
                 '$abbreviation • $roleLabel',
-                style: Theme.of(context).textTheme.bodySmall,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontSize: 11),
               ),
             ],
           ),
         ),
         score == null
             ? Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 8,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
                   roleLabel,
                   style: Theme.of(
                     context,
-                  ).textTheme.labelLarge?.copyWith(color: accent),
+                  ).textTheme.labelLarge?.copyWith(color: accent, fontSize: 12),
                 ),
               )
             : Text(
                 '$score',
                 style: Theme.of(
                   context,
-                ).textTheme.displaySmall?.copyWith(fontSize: 42, color: accent),
+                ).textTheme.displaySmall?.copyWith(fontSize: 34, color: accent),
               ),
       ],
     );
@@ -735,7 +628,7 @@ class _StatusBadge extends StatelessWidget {
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(999),
@@ -744,7 +637,7 @@ class _StatusBadge extends StatelessWidget {
         label,
         style: Theme.of(
           context,
-        ).textTheme.labelLarge?.copyWith(color: foreground),
+        ).textTheme.labelLarge?.copyWith(color: foreground, fontSize: 12),
       ),
     );
   }
@@ -798,38 +691,6 @@ class _CenteredState extends StatelessWidget {
             ],
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _FallbackBanner extends StatelessWidget {
-  const _FallbackBanner({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.orange.shade50,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.orange.shade200),
-      ),
-      child: Row(
-        children: <Widget>[
-          Icon(Icons.info_outline, color: Colors.orange.shade900),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              message,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.orange.shade900),
-            ),
-          ),
-        ],
       ),
     );
   }

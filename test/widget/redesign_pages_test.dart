@@ -89,20 +89,37 @@ void main() {
     },
   );
 
-  testWidgets('NewsPage shows placeholder image when article has no image', (
+  testWidgets('NewsPage renders text cards with source and timestamp', (
     WidgetTester tester,
   ) async {
+    final List<Article> articles = _sampleArticles();
+
     await tester.pumpWidget(
       _TestApp(
-        home: NewsPage(
-          repository: _FakeNewsRepository(() async => _sampleArticles()),
-        ),
+        home: NewsPage(repository: _FakeNewsRepository(() async => articles)),
         wrapInScaffold: true,
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('story-fallback-image-asset')), findsWidgets);
+    expect(find.text('Top headline'), findsOneWidget);
+    expect(find.text('Bench unit update'), findsOneWidget);
+    expect(find.text('Lead story summary'), findsOneWidget);
+    expect(find.text('Secondary summary'), findsOneWidget);
+    expect(
+      find.byKey(
+        ValueKey<String>('news-meta-source-${articles.first.dedupeKey}'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(
+        ValueKey<String>('news-meta-timestamp-${articles.first.dedupeKey}'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('The Daily Wire'), findsNothing);
+    expect(find.byType(Image), findsNothing);
   });
 
   testWidgets('ArticleReaderPage shows placeholder image on broken image url', (
@@ -365,7 +382,7 @@ void main() {
     expect(find.text('Stephen Curry'), findsOneWidget);
   });
 
-  testWidgets('NewsPage shows fallback banner and demo content', (
+  testWidgets('NewsPage shows demo content without fallback banner', (
     WidgetTester tester,
   ) async {
     final NewsRepository repository = NewsRepository(
@@ -386,15 +403,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(
-      find.textContaining('Showing bundled demo headlines'),
-      findsOneWidget,
-    );
     expect(find.text('Fallback story'), findsOneWidget);
+    expect(find.textContaining('Showing bundled demo headlines'), findsNothing);
     expect(find.text('News feed unavailable'), findsNothing);
   });
 
-  testWidgets('ScorePage shows fallback banner and demo games', (
+  testWidgets('ScorePage shows demo games when fallback data is used', (
     WidgetTester tester,
   ) async {
     final BasketballRepository repository = BasketballRepository(
@@ -415,10 +429,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(
-      find.textContaining('Showing bundled demo scoreboard data'),
-      findsOneWidget,
-    );
     expect(find.text('Golden State Warriors'), findsOneWidget);
     expect(find.text('Scoreboard unavailable'), findsNothing);
   });
