@@ -4,14 +4,28 @@ import 'package:project_jordan/model/news_model.dart';
 import 'package:project_jordan/theme/app_theme.dart';
 import 'package:transparent_image/transparent_image.dart';
 
-class ArticleReaderPage extends StatelessWidget {
+class ArticleReaderPage extends StatefulWidget {
   const ArticleReaderPage({super.key, required this.article});
 
   final Article article;
 
   @override
+  State<ArticleReaderPage> createState() => _ArticleReaderPageState();
+}
+
+class _ArticleReaderPageState extends State<ArticleReaderPage> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final Article article = widget.article;
     final bool hasContent = (article.content ?? '').trim().isNotEmpty;
     final bool hasDescription = article.description.trim().isNotEmpty;
 
@@ -24,7 +38,10 @@ class ArticleReaderPage extends StatelessWidget {
         title: Text(article.source, style: theme.textTheme.headlineMedium),
       ),
       body: Scrollbar(
+        controller: _scrollController,
         child: ListView(
+          controller: _scrollController,
+          primary: false,
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
           children: <Widget>[
             Center(

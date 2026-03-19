@@ -31,6 +31,7 @@ class NewsPage extends StatefulWidget {
 
 class _NewsPageState extends State<NewsPage> {
   late Future<List<Article>> _futureArticles;
+  final ScrollController _scrollController = ScrollController();
   _NewsLayoutMode _layoutMode = _NewsLayoutMode.list;
 
   @override
@@ -47,6 +48,12 @@ class _NewsPageState extends State<NewsPage> {
   }
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Article>>(
       future: _futureArticles,
@@ -57,7 +64,10 @@ class _NewsPageState extends State<NewsPage> {
             color: AppTheme.accentRed,
             onRefresh: _reload,
             child: Scrollbar(
+              controller: _scrollController,
               child: ListView(
+                controller: _scrollController,
+                primary: false,
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
                 children: <Widget>[

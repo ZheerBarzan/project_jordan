@@ -130,7 +130,7 @@ class NbaApiService {
   }) async {
     if (_apiKey.isEmpty) {
       throw const NbaApiException(
-        'BALLDONTLIE_API_KEY is missing. Configure it with --dart-define to load scores and teams.',
+        'BALLDONTLIE_API_KEY is missing from this build. Stop the app and run it again with --dart-define-from-file=.dart_define.local.json or --dart-define=BALLDONTLIE_API_KEY=your_api_key.',
       );
     }
 

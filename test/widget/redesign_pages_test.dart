@@ -6,6 +6,7 @@ import 'package:project_jordan/UI/news_page.dart';
 import 'package:project_jordan/UI/score_page.dart';
 import 'package:project_jordan/UI/stats_page.dart';
 import 'package:project_jordan/components/scroll_chrome.dart';
+import 'package:project_jordan/components/team_logo_badge.dart';
 import 'package:project_jordan/model/game_model.dart';
 import 'package:project_jordan/model/news_model.dart';
 import 'package:project_jordan/model/player.dart';
@@ -359,7 +360,7 @@ void main() {
     expect(find.text('Matchup Summary'), findsNothing);
   });
 
-  testWidgets('StatsPage switches from teams to players section', (
+  testWidgets('StatsPage defaults to standings and switches to leaders', (
     WidgetTester tester,
   ) async {
     final _FakeBasketballRepository repository = _FakeBasketballRepository(
@@ -369,17 +370,186 @@ void main() {
     );
 
     await tester.pumpWidget(
-      _TestApp(home: StatsPage(repository: repository), wrapInScaffold: true),
+      _TestApp(
+        home: StatsPage(
+          repository: repository,
+          contentRepository: _fakeScoreboardContentRepository(),
+        ),
+        wrapInScaffold: true,
+      ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Eastern Conference'), findsOneWidget);
+    expect(find.byKey(const Key('stats-primary-tabs')), findsOneWidget);
+    expect(find.byKey(const Key('stats-table-east')), findsOneWidget);
 
-    await tester.tap(find.text('Players'));
+    await tester.tap(find.text('Leaders'));
     await tester.pumpAndSettle();
 
+    expect(find.byKey(const Key('stats-featured-leaders')), findsOneWidget);
     expect(find.text('Points Leaders'), findsOneWidget);
     expect(find.text('Stephen Curry'), findsOneWidget);
+  });
+
+  testWidgets('StatsPage season selector reloads the dashboard', (
+    WidgetTester tester,
+  ) async {
+    final _FakeBasketballRepository repository = _FakeBasketballRepository(
+      upcomingGames: <Game>[],
+      previousGames: <Game>[],
+      dashboard: _dashboard(),
+    );
+    final int currentSeason = _currentNbaSeasonForTest();
+    final int previousSeason = currentSeason - 1;
+
+    await tester.pumpWidget(
+      _TestApp(
+        home: StatsPage(
+          repository: repository,
+          contentRepository: _fakeScoreboardContentRepository(),
+        ),
+        wrapInScaffold: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(repository.requestedStatsSeasons.last, currentSeason);
+
+    await tester.tap(find.byKey(const Key('stats-season-selector')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(_seasonLabelForTest(previousSeason)).last);
+    await tester.pumpAndSettle();
+
+    expect(repository.requestedStatsSeasons, contains(previousSeason));
+    expect(find.text(_seasonLabelForTest(previousSeason)), findsWidgets);
+  });
+
+  testWidgets('StatsPage uses the conference switcher on narrow layouts', (
+    WidgetTester tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+
+    final _FakeBasketballRepository repository = _FakeBasketballRepository(
+      upcomingGames: <Game>[],
+      previousGames: <Game>[],
+      dashboard: _dashboard(),
+    );
+
+    await tester.pumpWidget(
+      _TestApp(
+        home: StatsPage(
+          repository: repository,
+          contentRepository: _fakeScoreboardContentRepository(),
+        ),
+        wrapInScaffold: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('stats-conference-switcher')), findsOneWidget);
+    expect(find.byKey(const Key('stats-standing-row-BOS')), findsOneWidget);
+    expect(find.byKey(const Key('stats-standing-row-OKC')), findsNothing);
+
+    await tester.ensureVisible(
+      find.byKey(const Key('stats-conference-switcher')),
+    );
+    final Finder westChip = find.descendant(
+      of: find.byKey(const Key('stats-conference-switcher')),
+      matching: find.text('West'),
+    );
+    await tester.ensureVisible(westChip);
+    tester
+        .widget<ChoiceChip>(
+          find.ancestor(of: westChip, matching: find.byType(ChoiceChip)),
+        )
+        .onSelected!(true);
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'West'))
+          .selected,
+      isTrue,
+    );
+    expect(find.byKey(const Key('stats-standing-row-OKC')), findsOneWidget);
+  });
+
+  testWidgets('StatsPage leader chips switch leaderboard categories', (
+    WidgetTester tester,
+  ) async {
+    final _FakeBasketballRepository repository = _FakeBasketballRepository(
+      upcomingGames: <Game>[],
+      previousGames: <Game>[],
+      dashboard: _dashboard(),
+    );
+
+    await tester.pumpWidget(
+      _TestApp(
+        home: StatsPage(
+          repository: repository,
+          contentRepository: _fakeScoreboardContentRepository(),
+        ),
+        wrapInScaffold: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Leaders'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('stats-leader-stat-chips')), findsOneWidget);
+    expect(find.text('Points Leaders'), findsOneWidget);
+    expect(find.byKey(const Key('stats-leader-row-pts-4')), findsOneWidget);
+
+    await tester.tap(find.text('AST'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Assist Leaders'), findsOneWidget);
+    expect(find.text('LeBron James'), findsWidgets);
+    expect(find.byKey(const Key('stats-leader-row-ast-1')), findsOneWidget);
+  });
+
+  testWidgets('StatsPage uses branding when available and falls back cleanly', (
+    WidgetTester tester,
+  ) async {
+    final _FakeBasketballRepository repository = _FakeBasketballRepository(
+      upcomingGames: <Game>[],
+      previousGames: <Game>[],
+      dashboard: _dashboard(),
+    );
+
+    await tester.pumpWidget(
+      _TestApp(
+        home: StatsPage(
+          repository: repository,
+          contentRepository: _fakeScoreboardContentRepository(),
+        ),
+        wrapInScaffold: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      await _fakeScoreboardContentRepository().loadTeamBranding(),
+      isNotEmpty,
+    );
+    expect(find.byType(TeamLogoBadge), findsWidgets);
+
+    await tester.pumpWidget(
+      _TestApp(
+        home: StatsPage(
+          repository: repository,
+          contentRepository: _emptyBrandingContentRepository(),
+        ),
+        wrapInScaffold: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('stats-table-east')), findsOneWidget);
+    expect(find.byType(TeamLogoBadge), findsWidgets);
+    expect(await _emptyBrandingContentRepository().loadTeamBranding(), isEmpty);
   });
 
   testWidgets('NewsPage shows demo content without fallback banner', (
@@ -481,6 +651,7 @@ class _FakeBasketballRepository implements BasketballDataRepository {
   final List<Game> upcomingGames;
   final List<Game> previousGames;
   final StatsDashboard dashboard;
+  final List<int> requestedStatsSeasons = <int>[];
 
   @override
   Future<List<Game>> fetchGamesForDate(DateTime date) async => previousGames;
@@ -495,8 +666,10 @@ class _FakeBasketballRepository implements BasketballDataRepository {
   Future<List<Game>> fetchPreviousGames({int days = 14}) async => previousGames;
 
   @override
-  Future<StatsDashboard> fetchStatsDashboard({required int season}) async =>
-      dashboard;
+  Future<StatsDashboard> fetchStatsDashboard({required int season}) async {
+    requestedStatsSeasons.add(season);
+    return dashboard;
+  }
 }
 
 class _ChromeTestPage extends StatelessWidget {
@@ -636,10 +809,21 @@ Team _team(int id, String abbreviation, String fullName, String conference) {
 StatsDashboard _dashboard() {
   final Team warriors = _team(10, 'GSW', 'Golden State Warriors', 'West');
   final Team celtics = _team(2, 'BOS', 'Boston Celtics', 'East');
+  final Team lakers = _team(14, 'LAL', 'Los Angeles Lakers', 'West');
+  final Team knicks = _team(5, 'NYK', 'New York Knicks', 'East');
+  final Team thunder = _team(25, 'OKC', 'Oklahoma City Thunder', 'West');
+  final Team heat = _team(22, 'MIA', 'Miami Heat', 'East');
 
   return StatsDashboard(
     season: 2025,
-    teamsById: <int, Team>{warriors.id: warriors, celtics.id: celtics},
+    teamsById: <int, Team>{
+      warriors.id: warriors,
+      celtics.id: celtics,
+      lakers.id: lakers,
+      knicks.id: knicks,
+      thunder.id: thunder,
+      heat.id: heat,
+    },
     standings: <TeamStanding>[
       TeamStanding(
         team: celtics,
@@ -654,14 +838,62 @@ StatsDashboard _dashboard() {
         season: 2025,
       ),
       TeamStanding(
+        team: knicks,
+        conferenceRecord: '35-15',
+        conferenceRank: 2,
+        divisionRecord: '9-4',
+        divisionRank: 2,
+        wins: 49,
+        losses: 23,
+        homeRecord: '26-10',
+        roadRecord: '23-13',
+        season: 2025,
+      ),
+      TeamStanding(
+        team: heat,
+        conferenceRecord: '31-19',
+        conferenceRank: 3,
+        divisionRecord: '8-5',
+        divisionRank: 2,
+        wins: 45,
+        losses: 27,
+        homeRecord: '24-12',
+        roadRecord: '21-15',
+        season: 2025,
+      ),
+      TeamStanding(
+        team: thunder,
+        conferenceRecord: '39-11',
+        conferenceRank: 1,
+        divisionRecord: '12-2',
+        divisionRank: 1,
+        wins: 53,
+        losses: 19,
+        homeRecord: '28-8',
+        roadRecord: '25-11',
+        season: 2025,
+      ),
+      TeamStanding(
         team: warriors,
         conferenceRecord: '38-12',
-        conferenceRank: 1,
+        conferenceRank: 2,
         divisionRecord: '11-3',
         divisionRank: 1,
         wins: 50,
         losses: 22,
         homeRecord: '27-9',
+        roadRecord: '23-13',
+        season: 2025,
+      ),
+      TeamStanding(
+        team: lakers,
+        conferenceRecord: '34-16',
+        conferenceRank: 3,
+        divisionRecord: '10-4',
+        divisionRank: 2,
+        wins: 48,
+        losses: 24,
+        homeRecord: '25-11',
         roadRecord: '23-13',
         season: 2025,
       ),
@@ -683,6 +915,54 @@ StatsDashboard _dashboard() {
         threePointPct: 38.1,
         plusMinus: 7.2,
       ),
+      knicks.id: TeamSeasonStats(
+        team: knicks,
+        season: 2025,
+        seasonType: 'regular',
+        wins: 49,
+        losses: 23,
+        gamesPlayed: 72,
+        points: 116.8,
+        rebounds: 44.1,
+        assists: 27.7,
+        steals: 7.6,
+        blocks: 4.4,
+        fieldGoalPct: 47.4,
+        threePointPct: 37.8,
+        plusMinus: 5.0,
+      ),
+      heat.id: TeamSeasonStats(
+        team: heat,
+        season: 2025,
+        seasonType: 'regular',
+        wins: 45,
+        losses: 27,
+        gamesPlayed: 72,
+        points: 112.9,
+        rebounds: 42.8,
+        assists: 25.1,
+        steals: 8.2,
+        blocks: 4.8,
+        fieldGoalPct: 46.8,
+        threePointPct: 36.6,
+        plusMinus: 2.9,
+      ),
+      thunder.id: TeamSeasonStats(
+        team: thunder,
+        season: 2025,
+        seasonType: 'regular',
+        wins: 53,
+        losses: 19,
+        gamesPlayed: 72,
+        points: 119.3,
+        rebounds: 45.2,
+        assists: 29.4,
+        steals: 8.9,
+        blocks: 6.2,
+        fieldGoalPct: 49.2,
+        threePointPct: 38.4,
+        plusMinus: 8.1,
+      ),
       warriors.id: TeamSeasonStats(
         team: warriors,
         season: 2025,
@@ -698,6 +978,22 @@ StatsDashboard _dashboard() {
         fieldGoalPct: 47.2,
         threePointPct: 39.0,
         plusMinus: 5.7,
+      ),
+      lakers.id: TeamSeasonStats(
+        team: lakers,
+        season: 2025,
+        seasonType: 'regular',
+        wins: 48,
+        losses: 24,
+        gamesPlayed: 72,
+        points: 117.4,
+        rebounds: 43.5,
+        assists: 28.3,
+        steals: 7.5,
+        blocks: 5.7,
+        fieldGoalPct: 48.1,
+        threePointPct: 37.1,
+        plusMinus: 4.6,
       ),
     },
     leadersByStat: <String, List<PlayerLeader>>{
@@ -716,10 +1012,251 @@ StatsDashboard _dashboard() {
           season: 2025,
           gamesPlayed: 68,
         ),
+        PlayerLeader(
+          player: const Player(
+            id: 31,
+            firstName: 'Shai',
+            lastName: 'Gilgeous-Alexander',
+            position: 'G',
+            teamId: 25,
+          ),
+          value: 30.4,
+          statType: 'pts',
+          rank: 2,
+          season: 2025,
+          gamesPlayed: 69,
+        ),
+        PlayerLeader(
+          player: const Player(
+            id: 32,
+            firstName: 'Jayson',
+            lastName: 'Tatum',
+            position: 'F',
+            teamId: 2,
+          ),
+          value: 29.6,
+          statType: 'pts',
+          rank: 3,
+          season: 2025,
+          gamesPlayed: 70,
+        ),
+        PlayerLeader(
+          player: const Player(
+            id: 33,
+            firstName: 'Jalen',
+            lastName: 'Brunson',
+            position: 'G',
+            teamId: 5,
+          ),
+          value: 28.1,
+          statType: 'pts',
+          rank: 4,
+          season: 2025,
+          gamesPlayed: 67,
+        ),
+        PlayerLeader(
+          player: const Player(
+            id: 34,
+            firstName: 'LeBron',
+            lastName: 'James',
+            position: 'F',
+            teamId: 14,
+          ),
+          value: 27.5,
+          statType: 'pts',
+          rank: 5,
+          season: 2025,
+          gamesPlayed: 64,
+        ),
+      ],
+      'reb': <PlayerLeader>[
+        PlayerLeader(
+          player: const Player(
+            id: 35,
+            firstName: 'Anthony',
+            lastName: 'Davis',
+            position: 'C',
+            teamId: 14,
+          ),
+          value: 12.3,
+          statType: 'reb',
+          rank: 1,
+          season: 2025,
+          gamesPlayed: 61,
+        ),
+        PlayerLeader(
+          player: const Player(
+            id: 36,
+            firstName: 'Bam',
+            lastName: 'Adebayo',
+            position: 'C',
+            teamId: 22,
+          ),
+          value: 11.2,
+          statType: 'reb',
+          rank: 2,
+          season: 2025,
+          gamesPlayed: 69,
+        ),
+        PlayerLeader(
+          player: const Player(
+            id: 37,
+            firstName: 'Isaiah',
+            lastName: 'Hartenstein',
+            position: 'C',
+            teamId: 25,
+          ),
+          value: 10.8,
+          statType: 'reb',
+          rank: 3,
+          season: 2025,
+          gamesPlayed: 66,
+        ),
+      ],
+      'ast': <PlayerLeader>[
+        PlayerLeader(
+          player: const Player(
+            id: 34,
+            firstName: 'LeBron',
+            lastName: 'James',
+            position: 'F',
+            teamId: 14,
+          ),
+          value: 9.8,
+          statType: 'ast',
+          rank: 1,
+          season: 2025,
+          gamesPlayed: 64,
+        ),
+        PlayerLeader(
+          player: const Player(
+            id: 30,
+            firstName: 'Stephen',
+            lastName: 'Curry',
+            position: 'G',
+            teamId: 10,
+          ),
+          value: 8.7,
+          statType: 'ast',
+          rank: 2,
+          season: 2025,
+          gamesPlayed: 68,
+        ),
+        PlayerLeader(
+          player: const Player(
+            id: 33,
+            firstName: 'Jalen',
+            lastName: 'Brunson',
+            position: 'G',
+            teamId: 5,
+          ),
+          value: 8.4,
+          statType: 'ast',
+          rank: 3,
+          season: 2025,
+          gamesPlayed: 67,
+        ),
+      ],
+      'stl': <PlayerLeader>[
+        PlayerLeader(
+          player: const Player(
+            id: 31,
+            firstName: 'Shai',
+            lastName: 'Gilgeous-Alexander',
+            position: 'G',
+            teamId: 25,
+          ),
+          value: 2.3,
+          statType: 'stl',
+          rank: 1,
+          season: 2025,
+          gamesPlayed: 69,
+        ),
+        PlayerLeader(
+          player: const Player(
+            id: 38,
+            firstName: 'Jimmy',
+            lastName: 'Butler',
+            position: 'F',
+            teamId: 22,
+          ),
+          value: 2.0,
+          statType: 'stl',
+          rank: 2,
+          season: 2025,
+          gamesPlayed: 58,
+        ),
+        PlayerLeader(
+          player: const Player(
+            id: 30,
+            firstName: 'Stephen',
+            lastName: 'Curry',
+            position: 'G',
+            teamId: 10,
+          ),
+          value: 1.9,
+          statType: 'stl',
+          rank: 3,
+          season: 2025,
+          gamesPlayed: 68,
+        ),
+      ],
+      'blk': <PlayerLeader>[
+        PlayerLeader(
+          player: const Player(
+            id: 35,
+            firstName: 'Anthony',
+            lastName: 'Davis',
+            position: 'C',
+            teamId: 14,
+          ),
+          value: 2.5,
+          statType: 'blk',
+          rank: 1,
+          season: 2025,
+          gamesPlayed: 61,
+        ),
+        PlayerLeader(
+          player: const Player(
+            id: 39,
+            firstName: 'Chet',
+            lastName: 'Holmgren',
+            position: 'C',
+            teamId: 25,
+          ),
+          value: 2.2,
+          statType: 'blk',
+          rank: 2,
+          season: 2025,
+          gamesPlayed: 63,
+        ),
+        PlayerLeader(
+          player: const Player(
+            id: 36,
+            firstName: 'Bam',
+            lastName: 'Adebayo',
+            position: 'C',
+            teamId: 22,
+          ),
+          value: 1.8,
+          statType: 'blk',
+          rank: 3,
+          season: 2025,
+          gamesPlayed: 69,
+        ),
       ],
     },
     warnings: const <String>[],
   );
+}
+
+int _currentNbaSeasonForTest() {
+  final DateTime now = DateTime.now();
+  return now.month >= 10 ? now.year : now.year - 1;
+}
+
+String _seasonLabelForTest(int season) {
+  return '$season-${(season + 1).toString().substring(2)}';
 }
 
 const String _fallbackNewsJson = '''
@@ -817,12 +1354,22 @@ const String _fallbackGamesJson = '''
 ''';
 
 ScoreboardContentRepository _fakeScoreboardContentRepository() {
+  return _scoreboardContentRepositoryWithBranding(_teamBrandingJson);
+}
+
+ScoreboardContentRepository _emptyBrandingContentRepository() {
+  return _scoreboardContentRepositoryWithBranding('{}');
+}
+
+ScoreboardContentRepository _scoreboardContentRepositoryWithBranding(
+  String brandingJson,
+) {
   return ScoreboardContentRepository(
     fixtureLoader: AssetFixtureLoader(
       loadString: (String path) async {
         switch (path) {
           case 'assets/data/team_branding.json':
-            return _teamBrandingJson;
+            return brandingJson;
           case 'assets/data/game_details.json':
             return _gameDetailsJson;
           default:

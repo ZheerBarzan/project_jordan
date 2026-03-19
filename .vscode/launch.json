@@ -2,6 +2,14 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Flutter Current Device (Local Defines)",
+      "request": "launch",
+      "type": "dart",
+      "toolArgs": [
+        "--dart-define-from-file=.dart_define.local.json"
+      ]
+    },
+    {
       "name": "Flutter Android",
       "request": "launch",
       "type": "dart",

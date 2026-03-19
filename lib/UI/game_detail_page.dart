@@ -5,7 +5,7 @@ import 'package:project_jordan/model/game_detail.dart';
 import 'package:project_jordan/model/team_branding.dart';
 import 'package:project_jordan/theme/app_theme.dart';
 
-class GameDetailPage extends StatelessWidget {
+class GameDetailPage extends StatefulWidget {
   const GameDetailPage({
     super.key,
     required this.detail,
@@ -16,6 +16,19 @@ class GameDetailPage extends StatelessWidget {
   final GameDetail detail;
   final TeamBranding? homeBranding;
   final TeamBranding? visitorBranding;
+
+  @override
+  State<GameDetailPage> createState() => _GameDetailPageState();
+}
+
+class _GameDetailPageState extends State<GameDetailPage> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +46,10 @@ class GameDetailPage extends StatelessWidget {
         ),
       ),
       body: Scrollbar(
+        controller: _scrollController,
         child: SingleChildScrollView(
+          controller: _scrollController,
+          primary: false,
           padding: const EdgeInsets.fromLTRB(14, 6, 14, 24),
           child: Center(
             child: ConstrainedBox(
@@ -42,41 +58,41 @@ class GameDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
                   _HeroPanel(
-                    detail: detail,
-                    homeBranding: homeBranding,
-                    visitorBranding: visitorBranding,
+                    detail: widget.detail,
+                    homeBranding: widget.homeBranding,
+                    visitorBranding: widget.visitorBranding,
                   ),
                   const SizedBox(height: 14),
-                  _InfoStrip(detail: detail),
-                  if (detail.hasSummary) ...<Widget>[
+                  _InfoStrip(detail: widget.detail),
+                  if (widget.detail.hasSummary) ...<Widget>[
                     const SizedBox(height: 14),
                     _SectionCard(
                       title: 'Matchup Summary',
                       child: Text(
-                        detail.summary!,
+                        widget.detail.summary!,
                         style: Theme.of(
                           context,
                         ).textTheme.bodyLarge?.copyWith(fontSize: 15),
                       ),
                     ),
                   ],
-                  if (detail.hasLineScore) ...<Widget>[
+                  if (widget.detail.hasLineScore) ...<Widget>[
                     const SizedBox(height: 14),
                     _LineScoreCard(
-                      detail: detail,
-                      homeBranding: homeBranding,
-                      visitorBranding: visitorBranding,
+                      detail: widget.detail,
+                      homeBranding: widget.homeBranding,
+                      visitorBranding: widget.visitorBranding,
                     ),
                   ],
-                  if (detail.hasNotes) ...<Widget>[
+                  if (widget.detail.hasNotes) ...<Widget>[
                     const SizedBox(height: 14),
                     _SectionCard(
-                      title: detail.game.isScheduled
+                      title: widget.detail.game.isScheduled
                           ? 'Preview Notes'
                           : 'Game Notes',
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: detail.notes
+                        children: widget.detail.notes
                             .map(
                               (String note) => Padding(
                                 padding: const EdgeInsets.only(bottom: 8),
